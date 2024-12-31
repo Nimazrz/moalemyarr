@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from django.utils.timezone import now
+from django.core.validators import MinLengthValidator
 
 
 def image_directory_path(instance, filename):
@@ -13,10 +13,10 @@ def image_directory_path(instance, filename):
 class CustomUserManager(BaseUserManager):
     def _create_user(self, code_meli, password, is_staff=False, is_superuser=False, **other_fields):
         if not code_meli:
-            raise ValueError('فیلد کد ملی اجباری است')
+            raise ValidationError('فیلد کد ملی اجباری است')
 
         if not password:
-            raise ValueError('یک پسورد بسازی')
+            raise ValidationError('یک پسورد بسازی')
 
         user = self.model(
             code_meli=code_meli,
@@ -38,7 +38,7 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     # required
-    code_meli = models.CharField(unique=True, max_length=10)
+    code_meli = models.CharField(unique=True, max_length=10, validators=[MinLengthValidator(10)])
     username = models.CharField(unique=True, max_length=20)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -54,7 +54,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     county = models.CharField(max_length=50, blank=True, null=True)
     landline_phone = models.CharField(max_length=11, blank=True, null=True)
     bio = models.CharField(max_length=500, blank=True, null=True)
-    profile = models.ImageField(upload_to=f'profile/{code_meli}/{username}', blank=True, null=True)
+    profile = models.ImageField(upload_to=image_directory_path, blank=True, null=True)
 
     # settings
     is_staff = models.BooleanField(default=False)
@@ -72,13 +72,20 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f'Question_designer: {self.get_full_name()}'
+    
+
+class CommonFieldsMixin(models.Model): 
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='%(class)s')
+    
+    class Meta: 
+        abstract = True 
 
 
-class Admin(models.Model):
+class Admin(CommonFieldsMixin):
     admin = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='admin')
 
 
-class Question_designer(models.Model):
+class Question_designer(CommonFieldsMixin):
     designer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='designer',
                                  limit_choices_to={'is_question_desiner': True})
 
@@ -86,10 +93,10 @@ class Question_designer(models.Model):
         return f'Question_designer : {self.designer.username}'
 
 
-class Student(models.Model):
+class Student(CommonFieldsMixin):
     student = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='student',
                                 limit_choices_to={'is_student': True})
 
     def __str__(self):
         return f'Student : {self.student}'
-
+    
