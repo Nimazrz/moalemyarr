@@ -46,7 +46,7 @@ class LoginSerializer(serializers.Serializer):
         if not code_meli or not password:
             raise serializers.ValidationError("Both code_meli and password are required.")
 
-        user = authenticate(username=code_meli, password=password)
+        user = authenticate(code_meli=code_meli, password=password)
         if not user:
             raise serializers.ValidationError("Invalid credentials.")
 
