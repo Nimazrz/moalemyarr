@@ -1,6 +1,7 @@
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from account.models import *
+from school.models import Question
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 
@@ -52,3 +53,17 @@ class LoginSerializer(serializers.Serializer):
 
         data['user'] = user
         return data
+
+class CreateQuestionSerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = Question
+        fields = ['title', 'audio_file', 'image']
+    def validate(self, attrs):
+        title = attrs.get("title")
+        audio_file = attrs.get("audio_file")
+        image = attrs.get("image")
+        if not (title or audio_file or image):
+            raise serializers.ValidationError("you shoud complete one of the fields")
+        
+        attrs["question"] = self.fields
+        return attrs

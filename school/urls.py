@@ -5,6 +5,7 @@ app_name = "school"
 urlpatterns = [
     path("signup/", views.SignupAPIView.as_view(), name="signup"),
     path("login/", views.LoginAPIView.as_view(), name="login"),
-    path("loggout/", views.LoggoutAPIViwe.as_view(), name="loggout")
+    path("loggout/", views.LoggoutAPIViwe.as_view(), name="loggout"),
+    # path("createquestion")
 
 ]
