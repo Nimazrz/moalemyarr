@@ -109,7 +109,7 @@ class Image(models.Model):
 
 # questions
 class Question(models.Model):
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, blank=True, null=True)
     audio_file = models.FileField(upload_to='question_audios/%Y/%m/%d/', blank=True, null=True)
     image = models.ImageField(upload_to='question_images/%Y/%m/%d/', blank=True, null=True)
 

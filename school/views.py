@@ -43,11 +43,16 @@ class LoggoutAPIViwe(APIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
     
 
+
 class CreateQuestionAPIView(APIView):
     def post(self, request):
-        serializer = CreateQuestionSerializer(attrs=request.attrs)
+        serializer = CreateQuestionSerializer(data=request.data)  # Pass request.data to the serializer
         if serializer.is_valid():
-            attrs = serializer.validated_data["attrs"]
-            Question.objects.create(title=attrs["title"], audio_file=attrs["audio_file"], image=attrs["image"])
-            return Response({"message" :"your question created"}, status=status.HTTP_201_CREATED)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+            validated_data = serializer.validated_data
+            Question.objects.create(
+                title=validated_data.get("title"),
+                audio_file=validated_data.get("audio_file"),
+                image=validated_data.get("image")
+            )
+            return Response({"message": "Your question has been created successfully."}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  # Include validation errors

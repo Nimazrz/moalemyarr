@@ -59,11 +59,9 @@ class CreateQuestionSerializer(serializers.ModelSerializer):
         model = Question
         fields = ['title', 'audio_file', 'image']
     def validate(self, attrs):
-        title = attrs.get("title")
-        audio_file = attrs.get("audio_file")
-        image = attrs.get("image")
-        if not (title or audio_file or image):
-            raise serializers.ValidationError("you shoud complete one of the fields")
-        
-        attrs["question"] = self.fields
+        # Check if at least one field is provided
+        if not any([attrs.get('title'), attrs.get('audio_file'), attrs.get('image')]):
+            raise serializers.ValidationError(
+                "At least one of 'title', 'audio_file', or 'image' must be provided."
+            )
         return attrs
