@@ -1,7 +1,7 @@
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from account.models import *
-from school.models import Question
+from school.models import Question, Subquestion, Education_stage
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 
@@ -65,3 +65,11 @@ class CreateQuestionSerializer(serializers.ModelSerializer):
                 "At least one of 'title', 'audio_file', or 'image' must be provided."
             )
         return attrs
+# class CreateSubQuestionSerializer(serializers.ModelSerializer):
+#     class Meta: model = Subquestion
+#     fields = ['title', 'audio_file', 'image']
+
+class EducationStageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Education_stage
+        fields = ['name', 'book', 'season', 'lesson']

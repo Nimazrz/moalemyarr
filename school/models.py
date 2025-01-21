@@ -1,6 +1,6 @@
 from django.core.validators import FileExtensionValidator
 from django.db import models
-from account.models import Question_designer
+from account.models import Question_designer, CustomUser
 
 
 # Create your models here.
@@ -14,7 +14,7 @@ def wrong_answer_upload_path(instance, filename):
 
 
 class Education_stage(models.Model):
-    desiner = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name='education_stage')
+    desiner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='education_stage')
     name = models.CharField(max_length=50)
     book = models.CharField(max_length=50, blank=True, null=True)
     season = models.CharField(max_length=50, blank=True, null=True)

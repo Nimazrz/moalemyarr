@@ -42,7 +42,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(unique=True, max_length=20)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    is_question_desiner = models.BooleanField(default=False, blank=False, null=False)
+    is_question_designer = models.BooleanField(default=False, blank=False, null=False)
     is_student = models.BooleanField(default=False, blank=False, null=False)
 
     # optional
@@ -71,14 +71,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return f'{self.first_name} {self.last_name}'
 
     def __str__(self):
-        return f'Question_designer: {self.get_full_name()}'
-    
+        return f' {self.get_full_name()}'
 
-class CommonFieldsMixin(models.Model): 
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='%(class)s_user')
-    
-    class Meta: 
-        abstract = True 
+
+class CommonFieldsMixin(models.Model):
+    class Meta:
+        abstract = True
 
 
 class Admin(CommonFieldsMixin):
@@ -87,7 +85,7 @@ class Admin(CommonFieldsMixin):
 
 class Question_designer(CommonFieldsMixin):
     designer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='designer',
-                                 limit_choices_to={'is_question_desiner': True})
+                                 limit_choices_to={'is_question_designer': True})
 
     def __str__(self):
         return f'Question_designer : {self.designer.username}'
@@ -99,4 +97,4 @@ class Student(CommonFieldsMixin):
 
     def __str__(self):
         return f'Student : {self.student}'
-    
+

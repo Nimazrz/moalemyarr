@@ -7,5 +7,6 @@ urlpatterns = [
     path("login/", views.LoginAPIView.as_view(), name="login"),
     path("loggout/", views.LoggoutAPIViwe.as_view(), name="loggout"),
     path("createquestion/", views.CreateQuestionAPIView.as_view(), name="createquestion"),
+    path("educationstage/", views.EducationStageAPIView.as_view(), name="educationstage"),
 
 ]
