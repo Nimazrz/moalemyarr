@@ -14,7 +14,7 @@ def wrong_answer_upload_path(instance, filename):
 
 
 class Education_stage(models.Model):
-    desiner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='education_stage')
+    designer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='education_stage')
     name = models.CharField(max_length=50)
     book = models.CharField(max_length=50, blank=True, null=True)
     season = models.CharField(max_length=50, blank=True, null=True)
@@ -130,7 +130,7 @@ class Subquestion(models.Model):
     image = models.ImageField(upload_to='subquestion_images/%Y/%m/%d/', blank=True, null=True)
     text = models.TextField(blank=True, null=True)
 
-    question_desiner = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name='questions')
+    question_designer = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name='questions')
     education_stage = models.ManyToManyField(Education_stage, related_name='subquestion')
     score = models.PositiveIntegerField(default=0)
     time = models.TimeField(null=False, blank=False)

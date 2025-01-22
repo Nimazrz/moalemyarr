@@ -6,13 +6,12 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 
 
-
 class SignupSerializer(serializers.Serializer):
     code_meli = serializers.CharField(max_length=10, min_length=10, required=True)
     username = serializers.CharField(max_length=50, min_length=2, required=True)
     first_name = serializers.CharField(max_length=50, min_length=2, required=True)
     last_name = serializers.CharField(max_length=50, min_length=2, required=True)
-    is_question_desiner = serializers.BooleanField(required=True)
+    is_question_designer = serializers.BooleanField(required=True)
     is_student = serializers.BooleanField(required=True)
     email = serializers.EmailField(required=False)
     phone = serializers.CharField(max_length=11, min_length=11, required=False)
@@ -54,10 +53,12 @@ class LoginSerializer(serializers.Serializer):
         data['user'] = user
         return data
 
+
 class CreateQuestionSerializer(serializers.ModelSerializer):
-    class Meta: 
+    class Meta:
         model = Question
         fields = ['title', 'audio_file', 'image']
+
     def validate(self, attrs):
         # Check if at least one field is provided
         if not any([attrs.get('title'), attrs.get('audio_file'), attrs.get('image')]):
@@ -65,6 +66,8 @@ class CreateQuestionSerializer(serializers.ModelSerializer):
                 "At least one of 'title', 'audio_file', or 'image' must be provided."
             )
         return attrs
+
+
 # class CreateSubQuestionSerializer(serializers.ModelSerializer):
 #     class Meta: model = Subquestion
 #     fields = ['title', 'audio_file', 'image']

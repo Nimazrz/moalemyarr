@@ -30,7 +30,7 @@ class LoginAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoggoutAPIViwe(APIView):
+class LogoutAPIView(APIView):
     """
     {
     "X-CSRFToken":"{% csrf_tocken %}"
@@ -59,12 +59,14 @@ class CreateQuestionAPIView(APIView):
 
 
 class EducationStageAPIView(APIView):
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         serializer = EducationStageSerializer(data=request.data)
         if serializer.is_valid():
-            if request.user.is_question_desiner:
+            if request.user.is_question_designer:
+                print("heloooohelooooheloooohelooooheloooohelooooheloooohelooooheloooo")
+                print(request.user)
                 Education_stage.objects.create(
-                    desiner=request.user,
+                    designer=request.user,
                     name=serializer.validated_data.get("name"),
                     book=serializer.validated_data.get("book"),
                     season=serializer.validated_data.get("season"),

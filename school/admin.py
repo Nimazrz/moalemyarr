@@ -22,7 +22,7 @@ class WrongAnswerInline(admin.TabularInline):
 
 @admin.register(Education_stage)
 class EducationStageAdmin(admin.ModelAdmin):
-    list_display = ('name', 'book', 'desiner')
+    list_display = ('name', 'book', 'designer')
 
 
 @admin.register(Subject)
@@ -48,5 +48,5 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(Subquestion)
 class SubquestionAdmin(admin.ModelAdmin):
-    list_display = ('question', 'question_desiner')
+    list_display = ('question', 'question_designer')
     inlines = [RightAnswerInline, WrongAnswerInline]
