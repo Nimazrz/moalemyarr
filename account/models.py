@@ -88,7 +88,7 @@ class Question_designer(CommonFieldsMixin):
                                  limit_choices_to={'is_question_designer': True})
 
     def __str__(self):
-        return f'Question_designer : {self.designer.username}'
+        return f'Question_designer : {self.designer.username}(id:{self.designer.id})'
 
 
 class Student(CommonFieldsMixin):

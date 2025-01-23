@@ -1,11 +1,14 @@
 from django.shortcuts import render
+from django.contrib.auth import logout, login
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.auth import authenticate
-from django.contrib.auth import logout, login
-
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import BasicAuthentication
 from .serializer import *
+from rest_framework.exceptions import PermissionDenied
+
 
 
 # Create your views here.
@@ -44,34 +47,50 @@ class LogoutAPIView(APIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class CreateQuestionAPIView(APIView):
-    def post(self, request):
-        serializer = CreateQuestionSerializer(data=request.data)  # Pass request.data to the serializer
-        if serializer.is_valid():
-            validated_data = serializer.validated_data
-            Question.objects.create(
-                title=validated_data.get("title"),
-                audio_file=validated_data.get("audio_file"),
-                image=validated_data.get("image")
-            )
-            return Response({"message": "Your question has been created successfully."}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  # Include validation errors
+class QuestionViewSet(viewsets.ModelViewSet):
+    queryset = Question.objects.all()
+    serializer_class = QuestionsSerializer
+    # authentication_classes = (BasicAuthentication, IsAuthenticated)
 
 
-class EducationStageAPIView(APIView):
-    def post(self, request, *args, **kwargs):
-        serializer = EducationStageSerializer(data=request.data)
-        if serializer.is_valid():
-            if request.user.is_question_designer:
-                print("heloooohelooooheloooohelooooheloooohelooooheloooohelooooheloooo")
-                print(request.user)
-                Education_stage.objects.create(
-                    designer=request.user,
-                    name=serializer.validated_data.get("name"),
-                    book=serializer.validated_data.get("book"),
-                    season=serializer.validated_data.get("season"),
-                    lesson=serializer.validated_data.get("lesson"),
-                )
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class SubquestionViewSet(viewsets.ModelViewSet):
+    queryset = Subquestion.objects.all()
+    serializer_class = SubquestionSerializer
+    authentication_classes = (BasicAuthentication,)
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            return Subquestion.objects.all()
+        elif hasattr(user, "is_question_designer") and user.is_question_designer:
+            return Subquestion.objects.filter(question_designer__id=user.id)
+        elif user.is_student:
+            raise PermissionDenied("You are not allowed to view or submit questions.")
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        try:
+            question_designer = Question_designer.objects.get(designer=user)
+        except ObjectDoesNotExist:
+            raise ValidationError("You are not a valid question designer.")
+
+        serializer.save(question_designer=question_designer)
+
+
+class EducationStageViewSet(viewsets.ModelViewSet):
+    queryset = Education_stage.objects.all()
+    serializer_class = EducationStageSerializer
+    authentication_classes = (BasicAuthentication,)
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        try:
+            designer = Question_designer.objects.get(designer=user)
+        except ObjectDoesNotExist:
+            raise ValidationError("You are not a valid question designer.")
+
+        serializer.save(designer=designer)
+
+
