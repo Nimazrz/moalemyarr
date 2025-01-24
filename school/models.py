@@ -117,7 +117,7 @@ class Question(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.title}"
+        return f"{self.title}(id:{self.id})"
 
     class Meta:
         db_table = 'question'
@@ -153,7 +153,7 @@ class Right_answer(models.Model):
         ('0', '0'),
         ('n', 'n'),
     )
-    question = models.ForeignKey(Subquestion, on_delete=models.CASCADE, related_name='right_answer')
+    subquestion = models.ForeignKey(Subquestion, on_delete=models.CASCADE, related_name='right_answer')
     title = models.CharField(max_length=200)
     image = models.ImageField(upload_to=right_answer_upload_path, blank=True, null=True)
     audio_file = models.FileField(upload_to=right_answer_upload_path, blank=True, null=True)
@@ -171,7 +171,7 @@ class Right_answer(models.Model):
 
 
 class Wrong_answer(models.Model):
-    question = models.ForeignKey(Subquestion, on_delete=models.CASCADE, related_name='wrong_answer')
+    subquestion = models.ForeignKey(Subquestion, on_delete=models.CASCADE, related_name='wrong_answer')
     title = models.CharField(max_length=200)
     image = models.ImageField(upload_to=wrong_answer_upload_path, blank=True, null=True)
     audio_file = models.FileField(upload_to=wrong_answer_upload_path, blank=True, null=True)

@@ -1,0 +1,6 @@
+{% if request.user.is_authenticated %}
+    {{ request.user.username }}
+    <a href="{% url 'schoolview:logout' %}">logout</a>
+{% else %}
+    <a href="{% url 'schoolview:login' %}">login</a>
+{% endif %}

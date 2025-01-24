@@ -58,7 +58,7 @@ class LoginSerializer(serializers.Serializer):
 class QuestionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
-        fields = ['id','title', 'audio_file', 'image']
+        fields = ['id', 'title', 'audio_file', 'image']
 
     def validate(self, attrs):
         if not any([attrs.get('title'), attrs.get('audio_file'), attrs.get('image')]):
@@ -71,7 +71,7 @@ class QuestionsSerializer(serializers.ModelSerializer):
 class EducationStageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Education_stage
-        fields = ['id','designer','name', 'book', 'season', 'lesson']
+        fields = ['id', 'designer', 'name', 'book', 'season', 'lesson']
         read_only_fields = ['designer']
 
         def create(self, validated_data):
@@ -96,45 +96,61 @@ class EducationStageSerializer(serializers.ModelSerializer):
             return super().update(instance, validated_data)
 
 
-
 class RightanswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Right_answer
         fields = ['id', 'title', 'image', 'audio_file', 'type']
 
 
+class WronganswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Wrong_answer
+        fields = ['title']
+
+
 class SubquestionSerializer(serializers.ModelSerializer):
-    right_answers = RightanswerSerializer(many=True, write_only=True)
+    right_answer = RightanswerSerializer(many=True,)
+    wrong_answer = WronganswerSerializer(many=True, )
 
     class Meta:
         model = Subquestion
         fields = ['id', 'question_designer', 'question', 'image', 'text', 'education_stage', 'score', 'time',
-                  'right_answers']
-        read_only_fields = ['question_designer', ]
+                  'right_answer', 'wrong_answer']
+        read_only_fields = ['question_designer']
+
+    def validate(self, attrs):
+        # Ensure right_answers and wrong_answers are provided
+        if 'right_answer' not in attrs or not attrs['right_answer']:
+            raise serializers.ValidationError({"right_answer": "This field is required."})
+        if 'wrong_answer' not in attrs or not attrs['wrong_answer']:
+            raise serializers.ValidationError({"wrong_answer": "This field is required."})
+        return attrs
 
     def create(self, validated_data):
+        right_answers_data = validated_data.pop('right_answer', [])
+        wrong_answers_data = validated_data.pop('wrong_answer', [])
+        education_stages = validated_data.pop('education_stage', [])
+
         user = self.context['request'].user
         try:
-            # Get the Question_designer instance related to the logged-in user
-            question_designer = Question_designer.objects.get(user=user)
-        except ObjectDoesNotExist:
-            raise serializers.ValidationError("You are not a valid question designer.")
+            question_designer = Question_designer.objects.get(designer=user)
+        except Question_designer.DoesNotExist:
+            raise serializers.ValidationError("You are not authorized to create subquestions.")
 
-        # Assign the question_designer to the validated_data
+        # Set the question_designer for the subquestion
         validated_data['question_designer'] = question_designer
 
         # Create the Subquestion instance
-        subquestion = super().create(validated_data)
+        subquestion = Subquestion.objects.create(**validated_data)
 
-        # Handle creating Right_answer instances
-        right_answers_data = validated_data.pop('right_answers', [])
-        for answer_data in right_answers_data:
-            Right_answer.objects.create(subquestion=subquestion, **answer_data)
+        # Associate the ManyToMany field for education_stage
+        subquestion.education_stage.set(education_stages)
 
+        # Create related Right_answer instances
+        for right_answer_data in right_answers_data:
+            Right_answer.objects.create(subquestion=subquestion, **right_answer_data)
+
+        # Create related Wrong_answer instances
+        for wrong_answer_data in wrong_answers_data:
+            Wrong_answer.objects.create(subquestion=subquestion, **wrong_answer_data)
         return subquestion
-
-        # def update(self, instance, validated_data):
-        #     # Ensure the question_designer cannot be changed
-        #     validated_data.pop('question_designer', None)
-        #     return super().update(instance, validated_data)
-
