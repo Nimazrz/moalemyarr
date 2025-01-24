@@ -1,0 +1,29 @@
+{% extends 'parent/base.html' %}
+{% load static %}
+{% block title %}login{% endblock %}
+
+{% block content %}
+    <h1>فرم زیر را پر کنید</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit">
+    </form>
+
+
+    {% if form.errors %}
+    لطفا خطای زیر را اصلاح کنید
+    <br>
+    {% for field in form %}
+        {% if field.errors %}
+            {% for error in field.errors %}
+                {{ field.label }} : {{error}}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+{% if form.non_field_errors %}
+    {{form.non_field_errors}}
+{% endif %}
+
+{% endblock %}
