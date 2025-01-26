@@ -3,7 +3,6 @@ from rest_framework import serializers
 from account.models import *
 from school.models import Question, Subquestion, Education_stage, Right_answer, Wrong_answer
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import update_last_login
 from django.core.exceptions import ObjectDoesNotExist
 
 
@@ -26,15 +25,17 @@ class SignupSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, required=True)
     password2 = serializers.CharField(write_only=True, required=True)
 
-    def create(self, validated_data):
-        password = validated_data.pop('password')
-        password2 = validated_data.pop('password2')
+    def validate(self, data):
+        password = data.get("password")
+        password2 = data.pop("password2")
         if password != password2:
-            raise serializers.ValidationError({'password': 'Passwords must match.'})
-        validated_data['password'] = make_password(password)
-        user = CustomUser.objects.create(**validated_data)
-        return user
+            raise serializers.ValidationError({"password": "passwords must match"})
+        return data
 
+    def create(self, validated_data):
+        validated_data["password"] = make_password(validated_data["password"])
+        user = CustomUser.objects.create_user(**validated_data)
+        return user
 
 class LoginSerializer(serializers.Serializer):
     code_meli = serializers.CharField()

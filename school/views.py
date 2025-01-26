@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.authentication import BasicAuthentication
 from .serializer import *
 from rest_framework.exceptions import PermissionDenied
@@ -58,6 +58,7 @@ class SubquestionViewSet(viewsets.ModelViewSet):
     serializer_class = SubquestionSerializer
     authentication_classes = (BasicAuthentication,)
     permission_classes = [IsAuthenticated]
+
 
     def get_queryset(self):
         user = self.request.user
