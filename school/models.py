@@ -13,12 +13,28 @@ def wrong_answer_upload_path(instance, filename):
     return f'wrong_answers/{instance.question.id}/{filename}'
 
 
-class Education_stage(models.Model):
-    designer = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name='education_stage')
-    name = models.CharField(max_length=50)
-    book = models.CharField(max_length=50, blank=True, null=True)
-    season = models.CharField(max_length=50, blank=True, null=True)
-    lesson = models.CharField(max_length=50, blank=True, null=True)
+# class Education_stage(models.Model):
+#     designer = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name='education_stage')
+#     name = models.CharField(max_length=50)
+#     book = models.CharField(max_length=50, blank=True, null=True)
+#     season = models.CharField(max_length=50, blank=True, null=True)
+#     lesson = models.CharField(max_length=50, blank=True, null=True)
+#
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+#
+#     def __str__(self):
+#         return self.name
+#
+#     class Meta:
+#         db_table = 'education_stage'
+#         ordering = ['-created_at']
+#         verbose_name = 'پایه تحصیلی(دوره)'
+
+
+class Course(models.Model):
+    name = models.CharField(max_length=100)
+    designer = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name="courses")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -27,25 +43,73 @@ class Education_stage(models.Model):
         return self.name
 
     class Meta:
-        db_table = 'education_stage'
+        db_table = 'course'
         ordering = ['-created_at']
-        verbose_name = 'پایه تحصیلی(دوره)'
+        verbose_name = 'دوره ها'
 
 
-class Subject(models.Model):
-    education_stage = models.ForeignKey(Education_stage, on_delete=models.CASCADE, related_name='subject')
-    title = models.CharField(max_length=50)
+class Book(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="books")
+    name = models.CharField(max_length=100)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.title
+        return self.name
+
+    class Meta:
+        db_table = 'book'
+        ordering = ['-created_at']
+        verbose_name="کتاب ها"
+
+
+class Season(models.Model):
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="seasons")
+    name = models.CharField(max_length=100)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = 'season'
+        ordering = ['-created_at']
+        verbose_name = "فصل ها"
+
+
+class Lesson(models.Model):
+    season = models.ForeignKey(Season, on_delete=models.CASCADE, related_name="lessons")
+    name = models.CharField(max_length=100)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = 'lesson'
+        ordering = ['-created_at']
+        verbose_name = "درس ها"
+
+
+class Subject(models.Model):
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="subjects")
+    name = models.CharField(max_length=100)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
 
     class Meta:
         db_table = 'subject'
         ordering = ['-created_at']
-        verbose_name = 'موضوع'
+        verbose_name = 'موضوع ها'
 
 
 # social
@@ -78,14 +142,21 @@ class Social(models.Model):
 
 
 class Social_subject(models.Model):
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='social_subject')
+    class Category(models.TextChoices):
+        COURSE = 'Course'
+        BOOK = 'Book'
+        SEASON = 'Season'
+        LESSON = 'Lesson'
+        SUBJECT = 'Subject'
+
     social = models.ForeignKey(Social, on_delete=models.CASCADE, related_name='social_subject')
+    category = models.CharField(choices=Category.choices, max_length=50,blank=False, null=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.subject} and {self.social}"
+        return f"{self.social}"
 
     class Meta:
         db_table = 'social_subject'
@@ -131,7 +202,7 @@ class Subquestion(models.Model):
     text = models.TextField(blank=True, null=True)
 
     question_designer = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name='questions')
-    education_stage = models.ManyToManyField(Education_stage, related_name='subquestion')
+    # education_stage = models.ManyToManyField(Education_stage, related_name='subquestion')
     score = models.PositiveIntegerField(default=0)
     time = models.TimeField(null=False, blank=False)
 

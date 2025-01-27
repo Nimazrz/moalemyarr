@@ -1,4 +1,6 @@
 from django.contrib import admin
+
+from account.models import Student
 from .models import *
 
 
@@ -20,14 +22,29 @@ class WrongAnswerInline(admin.TabularInline):
     extra = 0
 
 
-@admin.register(Education_stage)
-class EducationStageAdmin(admin.ModelAdmin):
-    list_display = ('name', 'book', 'designer')
+@admin.register(Course)
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+
+
+@admin.register(Book)
+class BookAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+
+
+@admin.register(Season)
+class SeasonAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+
+
+@admin.register(Lesson)
+class LessonAdmin(admin.ModelAdmin):
+    list_display = ('name',)
 
 
 @admin.register(Subject)
 class SubjectAdmin(admin.ModelAdmin):
-    list_display = ('title', 'education_stage')
+    list_display = ('name',)
 
 
 @admin.register(Social)
@@ -38,12 +55,12 @@ class SocialAdmin(admin.ModelAdmin):
 
 @admin.register(Social_subject)
 class SocialSubjectAdmin(admin.ModelAdmin):
-    list_display = ('subject', 'social')
+    list_display = ('social',)
 
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('title', )
+    list_display = ('title',)
 
 
 @admin.register(Subquestion)
