@@ -40,7 +40,7 @@ class Course(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.name
+        return f" پایه{self.name}"
 
     class Meta:
         db_table = 'course'
@@ -56,7 +56,7 @@ class Book(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.name
+        return f"کتاب:{self.name}, {self.course}"
 
     class Meta:
         db_table = 'book'
@@ -72,7 +72,7 @@ class Season(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.name
+        return f"فصل:{self.name}, {self.book}"
 
     class Meta:
         db_table = 'season'
@@ -88,7 +88,7 @@ class Lesson(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.name
+        return f" درس:{self.name}, {self.season}"
 
     class Meta:
         db_table = 'lesson'
@@ -104,7 +104,7 @@ class Subject(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.name
+        return f" موضوع:{self.name}, {self.lesson}"
 
     class Meta:
         db_table = 'subject'
@@ -142,15 +142,13 @@ class Social(models.Model):
 
 
 class Social_subject(models.Model):
-    class Category(models.TextChoices):
-        COURSE = 'Course'
-        BOOK = 'Book'
-        SEASON = 'Season'
-        LESSON = 'Lesson'
-        SUBJECT = 'Subject'
-
     social = models.ForeignKey(Social, on_delete=models.CASCADE, related_name='social_subject')
-    category = models.CharField(choices=Category.choices, max_length=50,blank=False, null=False)
+
+    course = models.ManyToManyField(Course, related_name='social_subject', blank=True, null=True)
+    book = models.ManyToManyField(Book, related_name='social_subject', blank=True, null=True)
+    season = models.ManyToManyField(Season,related_name='social_subject', blank=True, null=True)
+    lesson = models.ManyToManyField(Lesson, related_name='social_subject', blank=True, null=True)
+    subject = models.ManyToManyField(Subject, related_name='social_subject', blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -197,14 +195,19 @@ class Question(models.Model):
 
 
 class Subquestion(models.Model):
+
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='subquestion', blank=True, null=True)
     image = models.ImageField(upload_to='subquestion_images/%Y/%m/%d/', blank=True, null=True)
     text = models.TextField(blank=True, null=True)
-
     question_designer = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name='questions')
-    # education_stage = models.ManyToManyField(Education_stage, related_name='subquestion')
     score = models.PositiveIntegerField(default=0)
     time = models.TimeField(null=False, blank=False)
+
+    course = models.ManyToManyField(Course, related_name='subquestions', blank=True, null=True)
+    book = models.ManyToManyField(Book,related_name='subquestions', blank=True, null=True)
+    season = models.ManyToManyField(Season, related_name='subquestions', blank=True, null=True)
+    lesson = models.ManyToManyField(Lesson, related_name='subquestions', blank=True, null=True)
+    subject = models.ManyToManyField(Subject, related_name='subquestions', blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

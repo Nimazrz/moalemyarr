@@ -5,7 +5,6 @@ router = routers.DefaultRouter()
 
 router.register(r'questions', views.QuestionViewSet)
 router.register(r'subquestions', views.SubquestionViewSet)
-# router.register(r'educationstages', views.EducationStageViewSet)
 
 app_name = "school"
 urlpatterns = [

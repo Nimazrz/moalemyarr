@@ -79,19 +79,4 @@ class SubquestionViewSet(viewsets.ModelViewSet):
         serializer.save(question_designer=question_designer)
 
 
-# class EducationStageViewSet(viewsets.ModelViewSet):
-#     queryset = Education_stage.objects.all()
-#     serializer_class = EducationStageSerializer
-#     authentication_classes = (BasicAuthentication,)
-#     permission_classes = [IsAuthenticated]
-#
-#     def perform_create(self, serializer):
-#         user = self.request.user
-#         try:
-#             designer = Question_designer.objects.get(designer=user)
-#         except ObjectDoesNotExist:
-#             raise ValidationError("You are not a valid question designer.")
-#
-#         serializer.save(designer=designer)
-
 
