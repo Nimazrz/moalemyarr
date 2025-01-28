@@ -10,6 +10,7 @@ def validate_subquestion_fields(sender, instance, **kwargs):
     if not (instance.question or instance.image or instance.text):
         raise ValidationError("At least one of 'question', 'image', or 'text' must be provided.")
 
+
 @receiver(post_save, sender=CustomUser)
 def create_question_designer(sender, instance, created, **kwargs):
     if created and instance.is_question_designer:

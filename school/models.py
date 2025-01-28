@@ -13,25 +13,6 @@ def wrong_answer_upload_path(instance, filename):
     return f'wrong_answers/{instance.question.id}/{filename}'
 
 
-# class Education_stage(models.Model):
-#     designer = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name='education_stage')
-#     name = models.CharField(max_length=50)
-#     book = models.CharField(max_length=50, blank=True, null=True)
-#     season = models.CharField(max_length=50, blank=True, null=True)
-#     lesson = models.CharField(max_length=50, blank=True, null=True)
-#
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-#
-#     def __str__(self):
-#         return self.name
-#
-#     class Meta:
-#         db_table = 'education_stage'
-#         ordering = ['-created_at']
-#         verbose_name = 'پایه تحصیلی(دوره)'
-
-
 class Course(models.Model):
     name = models.CharField(max_length=100)
     designer = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name="courses")
@@ -40,7 +21,7 @@ class Course(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f" پایه{self.name}"
+        return f" پایه: {self.name}"
 
     class Meta:
         db_table = 'course'
@@ -72,7 +53,7 @@ class Season(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"فصل:{self.name}, {self.book}"
+        return f"فصل: {self.name}, {self.book}"
 
     class Meta:
         db_table = 'season'
@@ -144,11 +125,11 @@ class Social(models.Model):
 class Social_subject(models.Model):
     social = models.ForeignKey(Social, on_delete=models.CASCADE, related_name='social_subject')
 
-    course = models.ManyToManyField(Course, related_name='social_subject', blank=True, null=True)
-    book = models.ManyToManyField(Book, related_name='social_subject', blank=True, null=True)
-    season = models.ManyToManyField(Season,related_name='social_subject', blank=True, null=True)
-    lesson = models.ManyToManyField(Lesson, related_name='social_subject', blank=True, null=True)
-    subject = models.ManyToManyField(Subject, related_name='social_subject', blank=True, null=True)
+    course = models.ManyToManyField(Course, related_name='social_subject', blank=True)
+    book = models.ManyToManyField(Book, related_name='social_subject', blank=True)
+    season = models.ManyToManyField(Season,related_name='social_subject', blank=True)
+    lesson = models.ManyToManyField(Lesson, related_name='social_subject', blank=True)
+    subject = models.ManyToManyField(Subject, related_name='social_subject', blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -203,11 +184,11 @@ class Subquestion(models.Model):
     score = models.PositiveIntegerField(default=0)
     time = models.TimeField(null=False, blank=False)
 
-    course = models.ManyToManyField(Course, related_name='subquestions', blank=True, null=True)
-    book = models.ManyToManyField(Book,related_name='subquestions', blank=True, null=True)
-    season = models.ManyToManyField(Season, related_name='subquestions', blank=True, null=True)
-    lesson = models.ManyToManyField(Lesson, related_name='subquestions', blank=True, null=True)
-    subject = models.ManyToManyField(Subject, related_name='subquestions', blank=True, null=True)
+    course = models.ManyToManyField(Course, related_name='subquestions', blank=True)
+    book = models.ManyToManyField(Book,related_name='subquestions', blank=True,)
+    season = models.ManyToManyField(Season, related_name='subquestions', blank=True)
+    lesson = models.ManyToManyField(Lesson, related_name='subquestions', blank=True, )
+    subject = models.ManyToManyField(Subject, related_name='subquestions', blank=True,)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

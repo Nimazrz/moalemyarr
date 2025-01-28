@@ -1,7 +1,7 @@
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from account.models import *
-from school.models import Question, Subquestion, Right_answer, Wrong_answer
+from school.models import Question, Subquestion, Right_answer, Wrong_answer, Course, Book, Season, Lesson, Subject
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -37,6 +37,7 @@ class SignupSerializer(serializers.Serializer):
         user = CustomUser.objects.create_user(**validated_data)
         return user
 
+
 class LoginSerializer(serializers.Serializer):
     code_meli = serializers.CharField()
     password = serializers.CharField(write_only=True)
@@ -69,7 +70,6 @@ class QuestionsSerializer(serializers.ModelSerializer):
         return attrs
 
 
-
 class RightanswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Right_answer
@@ -83,13 +83,13 @@ class WronganswerSerializer(serializers.ModelSerializer):
 
 
 class SubquestionSerializer(serializers.ModelSerializer):
-    right_answer = RightanswerSerializer(many=True,)
+    right_answer = RightanswerSerializer(many=True, )
     wrong_answer = WronganswerSerializer(many=True, )
 
     class Meta:
         model = Subquestion
-        fields = ['id', 'question_designer', 'question', 'image', 'text', 'education_stage', 'score', 'time',
-                  'right_answer', 'wrong_answer']
+        fields = ['id', 'question_designer', 'question', 'image', 'text', 'score', 'time', 'course', 'book', 'season',
+                  'lesson', 'subject', 'right_answer', 'wrong_answer']
         read_only_fields = ['question_designer']
 
     def validate(self, attrs):
@@ -103,22 +103,27 @@ class SubquestionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         right_answers_data = validated_data.pop('right_answer', [])
         wrong_answers_data = validated_data.pop('wrong_answer', [])
-        education_stages = validated_data.pop('education_stage', [])
+        courses_data = validated_data.pop('course', [])
+        books_data = validated_data.pop('book', [])
+        seasons_data = validated_data.pop('season', [])
+        lessons_data = validated_data.pop('lesson', [])
+        subjects_data = validated_data.pop('subject', [])
 
         user = self.context['request'].user
         try:
             question_designer = Question_designer.objects.get(designer=user)
         except Question_designer.DoesNotExist:
             raise serializers.ValidationError("You are not authorized to create subquestions.")
-
-        # Set the question_designer for the subquestion
         validated_data['question_designer'] = question_designer
 
         # Create the Subquestion instance
         subquestion = Subquestion.objects.create(**validated_data)
 
-        # Associate the ManyToMany field for education_stage
-        subquestion.education_stage.set(education_stages)
+        subquestion.course.set(courses_data)  # Assuming IDs are provided
+        subquestion.book.set(books_data)
+        subquestion.season.set(seasons_data)
+        subquestion.lesson.set(lessons_data)
+        subquestion.subject.set(subjects_data)
 
         # Create related Right_answer instances
         for right_answer_data in right_answers_data:
@@ -127,4 +132,5 @@ class SubquestionSerializer(serializers.ModelSerializer):
         # Create related Wrong_answer instances
         for wrong_answer_data in wrong_answers_data:
             Wrong_answer.objects.create(subquestion=subquestion, **wrong_answer_data)
+
         return subquestion
