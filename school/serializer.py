@@ -134,3 +134,40 @@ class SubquestionSerializer(serializers.ModelSerializer):
             Wrong_answer.objects.create(subquestion=subquestion, **wrong_answer_data)
 
         return subquestion
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = "__all__"
+
+    def validate(self, attrs):
+        courses = Course.objects.filter(name__contains=attrs['name'])
+        if courses.count() != 0:
+            raise serializers.ValidationError({"course": "This course is already taken."})
+        else:
+            return attrs
+
+
+class BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = "__all__"
+
+
+class SeasonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Season
+        fields = "__all__"
+
+
+class LessonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = "__all__"
+
+
+class SubjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subject
+        fields = "__all__"

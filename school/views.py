@@ -79,4 +79,24 @@ class SubquestionViewSet(viewsets.ModelViewSet):
         serializer.save(question_designer=question_designer)
 
 
+class CourseViewSet(viewsets.ModelViewSet):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
 
+
+class BookViewSet(viewsets.ModelViewSet):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+
+
+class SeasonViewSet(viewsets.ModelViewSet):
+    queryset = Season.objects.all()
+    serializer_class = SeasonSerializer
+
+class LessonViewSet(viewsets.ModelViewSet):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+
+class SubjectViewSet(viewsets.ModelViewSet):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
