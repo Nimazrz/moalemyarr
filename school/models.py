@@ -1,6 +1,7 @@
 from django.core.validators import FileExtensionValidator
 from django.db import models
-from account.models import Question_designer, CustomUser
+from account.models import Question_designer, CustomUser, Student
+from datetime import timedelta
 
 
 # Create your models here.
@@ -42,7 +43,7 @@ class Book(models.Model):
     class Meta:
         db_table = 'book'
         ordering = ['-created_at']
-        verbose_name="کتاب ها"
+        verbose_name = "کتاب ها"
 
 
 class Season(models.Model):
@@ -99,7 +100,7 @@ class Social(models.Model):
     title = models.CharField(max_length=50)
     time = models.PositiveIntegerField(default=0)
     text = models.TextField(blank=True, null=True)
-    video = models.FileField(upload_to='videos_uploaded/%Y/%m/%d/', null=True,blank=True,  validators=[
+    video = models.FileField(upload_to='videos_uploaded/%Y/%m/%d/', null=True, blank=True, validators=[
         FileExtensionValidator(allowed_extensions=['MOV', 'avi', 'mp4', 'webm', 'mkv'])])
     view = models.PositiveIntegerField(default=0)
 
@@ -127,7 +128,7 @@ class Social_subject(models.Model):
 
     course = models.ManyToManyField(Course, related_name='social_subject', blank=True)
     book = models.ManyToManyField(Book, related_name='social_subject', blank=True)
-    season = models.ManyToManyField(Season,related_name='social_subject', blank=True)
+    season = models.ManyToManyField(Season, related_name='social_subject', blank=True)
     lesson = models.ManyToManyField(Lesson, related_name='social_subject', blank=True)
     subject = models.ManyToManyField(Subject, related_name='social_subject', blank=True)
 
@@ -176,7 +177,6 @@ class Question(models.Model):
 
 
 class Subquestion(models.Model):
-
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='subquestion', blank=True, null=True)
     image = models.ImageField(upload_to='subquestion_images/%Y/%m/%d/', blank=True, null=True)
     text = models.TextField(blank=True, null=True)
@@ -185,10 +185,10 @@ class Subquestion(models.Model):
     time = models.TimeField(null=False, blank=False)
 
     course = models.ManyToManyField(Course, related_name='subquestions', blank=True)
-    book = models.ManyToManyField(Book,related_name='subquestions', blank=True,)
+    book = models.ManyToManyField(Book, related_name='subquestions', blank=True, )
     season = models.ManyToManyField(Season, related_name='subquestions', blank=True)
     lesson = models.ManyToManyField(Lesson, related_name='subquestions', blank=True, )
-    subject = models.ManyToManyField(Subject, related_name='subquestions', blank=True,)
+    subject = models.ManyToManyField(Subject, related_name='subquestions', blank=True, )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -241,3 +241,109 @@ class Wrong_answer(models.Model):
     class Meta:
         db_table = 'wrong_answer'
         ordering = ['-created_at']
+
+
+class Practice(models.Model):
+    student = models.ManyToManyField(Student)
+    subquestions = models.ManyToManyField(Subquestion)
+    zero = models.PositiveIntegerField(default=0)
+    nf = models.PositiveIntegerField(default=0)
+    nt = models.PositiveIntegerField(default=0)
+    date = models.DateTimeField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Practice,{self.student}"
+
+    class Meta:
+        db_table = 'practice'
+        ordering = ['-created_at']
+        verbose_name = 'تمرین'
+
+
+class Course_prerequisite(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_prerequisits')
+    prerequisite_course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_prerequisite')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.prerequisite_course.name} is a prerequisite for {self.course.name}"
+
+    class Meta:
+        db_table = 'course_prerequisite'
+        ordering = ['-created_at']
+        verbose_name = 'پیش نیاز دوره'
+
+
+class Study_report(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='study_report')
+    social = models.ForeignKey(Social, on_delete=models.CASCADE, related_name='study_report')
+    time = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.student}"
+
+    class Meta:
+        db_table = 'study_report'
+        ordering = ['-created_at']
+        verbose_name = 'کارنامه مطالعه'
+
+
+class Question_practice_worksheet(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='question_practice_worksheet')
+    needed_time = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
+    time = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
+    time_spent = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
+    # date
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.student}"
+
+    class Meta:
+        db_table = 'question_practice_worksheet'
+        ordering = ['-created_at']
+        verbose_name = 'کارنامه سوال تمرین'
+
+
+class Leitner_question(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='Leitner_question')
+    subquestion = models.ForeignKey(Subquestion, on_delete=models.CASCADE, related_name='Leitner_question')
+    #
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.student}"
+
+    class Meta:
+        db_table = 'leitner'
+        ordering = ['-created_at']
+        verbose_name = 'لایتنر، سوال'
+
+
+class Littler(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='Littler')
+    last_step = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.student}"
+
+    class Meta:
+        db_table = 'littler'
+        ordering = ['-created_at']
+        verbose_name = 'لایتنر'
+
