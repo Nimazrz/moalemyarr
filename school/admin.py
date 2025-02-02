@@ -67,3 +67,33 @@ class QuestionAdmin(admin.ModelAdmin):
 class SubquestionAdmin(admin.ModelAdmin):
     list_display = ('question', 'question_designer')
     inlines = [RightAnswerInline, WrongAnswerInline]
+
+
+@admin.register(Practice)
+class PracticeAdmin(admin.ModelAdmin):
+    list_display = ('nf', 'nt')
+
+
+@admin.register(Course_prerequisite)
+class CoursePrerequisiteAdmin(admin.ModelAdmin):
+    list_display = ('prerequisite_course', 'course')
+
+
+@admin.register(Study_report)
+class StudyReportAdmin(admin.ModelAdmin):
+    list_display = ('student', 'social', 'time')
+
+
+@admin.register(Question_practice_worksheet)
+class QuestionPracticeWorksheetAdmin(admin.ModelAdmin):
+    list_display = ('student', 'needed_time', 'time_spent')
+
+
+@admin.register(Leitner_question)
+class LeitnerQuestionAdmin(admin.ModelAdmin):
+    list_display = ('student', 'subquestion', 'n')
+
+
+@admin.register(Leitner)
+class LeitnerAdmin(admin.ModelAdmin):
+    list_display = ('student', 'last_step')

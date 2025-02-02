@@ -28,7 +28,8 @@ class Course(models.Model):
     class Meta:
         db_table = 'course'
         ordering = ['-created_at']
-        verbose_name = 'دوره ها'
+        verbose_name = 'دوره '
+        verbose_name_plural = "دوره ها"
 
 
 class Book(models.Model):
@@ -44,7 +45,8 @@ class Book(models.Model):
     class Meta:
         db_table = 'book'
         ordering = ['-created_at']
-        verbose_name = "کتاب ها"
+        verbose_name = "کتاب "
+        verbose_name_plural = "کتاب ها"
 
 
 class Season(models.Model):
@@ -60,7 +62,8 @@ class Season(models.Model):
     class Meta:
         db_table = 'season'
         ordering = ['-created_at']
-        verbose_name = "فصل ها"
+        verbose_name = "فصل "
+        verbose_name_plural = "فصل ها"
 
 
 class Lesson(models.Model):
@@ -76,7 +79,8 @@ class Lesson(models.Model):
     class Meta:
         db_table = 'lesson'
         ordering = ['-created_at']
-        verbose_name = "درس ها"
+        verbose_name = "درس "
+        verbose_name_plural = "درس ها"
 
 
 class Subject(models.Model):
@@ -92,7 +96,8 @@ class Subject(models.Model):
     class Meta:
         db_table = 'subject'
         ordering = ['-created_at']
-        verbose_name = 'موضوع ها'
+        verbose_name = 'موضوع '
+        verbose_name_plural = "موضوع ها"
 
 
 # social
@@ -122,6 +127,7 @@ class Social(models.Model):
         db_table = 'social'
         ordering = ['-created_at']
         verbose_name = 'رسانه'
+        verbose_name_plural = "رسانه"
 
 
 class Social_subject(models.Model):
@@ -142,7 +148,7 @@ class Social_subject(models.Model):
     class Meta:
         db_table = 'social_subject'
         ordering = ['-created_at']
-        verbose_name = 'موضوع/رسانه'
+        verbose_name_plural = 'موضوع/رسانه'
 
 
 class Image(models.Model):
@@ -175,6 +181,7 @@ class Question(models.Model):
         db_table = 'question'
         ordering = ['-created_at']
         verbose_name = 'صورت سوال'
+        verbose_name_plural = "صورت سوال"
 
 
 class Subquestion(models.Model):
@@ -201,6 +208,7 @@ class Subquestion(models.Model):
         db_table = 'subquestion'
         ordering = ['-created_at']
         verbose_name = 'سوال'
+        verbose_name_plural = "سوال ها"
 
 
 class Right_answer(models.Model):
@@ -224,6 +232,7 @@ class Right_answer(models.Model):
     class Meta:
         db_table = 'right_answer'
         ordering = ['-created_at']
+        verbose_name_plural = "جواب های درست"
 
 
 class Wrong_answer(models.Model):
@@ -242,11 +251,12 @@ class Wrong_answer(models.Model):
     class Meta:
         db_table = 'wrong_answer'
         ordering = ['-created_at']
+        verbose_name_plural = "جواب های غلط"
 
 
 class Practice(models.Model):
     student = models.ManyToManyField(Student)
-    subquestions = models.ManyToManyField(Subquestion)
+    subquestion = models.ManyToManyField(Subquestion)
     zero = models.PositiveIntegerField(default=0)
     nf = models.PositiveIntegerField(default=0)
     nt = models.PositiveIntegerField(default=0)
@@ -262,6 +272,7 @@ class Practice(models.Model):
         db_table = 'practice'
         ordering = ['-created_at']
         verbose_name = 'تمرین'
+        verbose_name_plural = "تمرین ها"
 
 
 class Course_prerequisite(models.Model):
@@ -278,6 +289,7 @@ class Course_prerequisite(models.Model):
         db_table = 'course_prerequisite'
         ordering = ['-created_at']
         verbose_name = 'پیش نیاز دوره'
+        verbose_name_plural = "پیش نیاز های دوره"
 
 
 class Study_report(models.Model):
@@ -295,6 +307,7 @@ class Study_report(models.Model):
         db_table = 'study_report'
         ordering = ['-created_at']
         verbose_name = 'کارنامه مطالعه'
+        verbose_name_plural = "کارنامه های مطالعاتی"
 
 
 class Question_practice_worksheet(models.Model):
@@ -314,6 +327,7 @@ class Question_practice_worksheet(models.Model):
         db_table = 'question_practice_worksheet'
         ordering = ['-created_at']
         verbose_name = 'کارنامه سوال تمرین'
+        verbose_name_plural = "کارنامه های سوال،تمرین"
 
 
 class Leitner_question(models.Model):
@@ -330,7 +344,8 @@ class Leitner_question(models.Model):
     class Meta:
         db_table = 'leitner'
         ordering = ['-created_at']
-        verbose_name = 'لایتنر، سوال'
+        verbose_name_plural = 'لایتنر، سوال'
+
 
 
 class Leitner(models.Model):
@@ -347,3 +362,4 @@ class Leitner(models.Model):
         db_table = 'littler'
         ordering = ['-created_at']
         verbose_name = 'لایتنر'
+        verbose_name_plural = "لایتنر ها"
