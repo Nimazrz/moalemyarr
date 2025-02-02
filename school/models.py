@@ -2,6 +2,7 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from account.models import Question_designer, CustomUser, Student
 from datetime import timedelta
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 # Create your models here.
@@ -301,7 +302,7 @@ class Question_practice_worksheet(models.Model):
     needed_time = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
     time = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
     time_spent = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
-    # date
+    date = models.DateTimeField()
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -318,7 +319,7 @@ class Question_practice_worksheet(models.Model):
 class Leitner_question(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='Leitner_question')
     subquestion = models.ForeignKey(Subquestion, on_delete=models.CASCADE, related_name='Leitner_question')
-    #
+    n = models.IntegerField(validators=[MinValueValidator(-1), MaxValueValidator(31)])
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -332,7 +333,7 @@ class Leitner_question(models.Model):
         verbose_name = 'لایتنر، سوال'
 
 
-class Littler(models.Model):
+class Leitner(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='Littler')
     last_step = models.PositiveIntegerField(default=0)
 
@@ -346,4 +347,3 @@ class Littler(models.Model):
         db_table = 'littler'
         ordering = ['-created_at']
         verbose_name = 'لایتنر'
-
