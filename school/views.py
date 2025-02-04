@@ -10,7 +10,6 @@ from .serializer import *
 from rest_framework.exceptions import PermissionDenied
 
 
-
 # Create your views here.
 
 class SignupAPIView(APIView):
@@ -59,7 +58,6 @@ class SubquestionViewSet(viewsets.ModelViewSet):
     authentication_classes = (BasicAuthentication,)
     permission_classes = [IsAuthenticated]
 
-
     def get_queryset(self):
         user = self.request.user
         if user.is_superuser:
@@ -93,9 +91,11 @@ class SeasonViewSet(viewsets.ModelViewSet):
     queryset = Season.objects.all()
     serializer_class = SeasonSerializer
 
+
 class LessonViewSet(viewsets.ModelViewSet):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
+
 
 class SubjectViewSet(viewsets.ModelViewSet):
     queryset = Subject.objects.all()

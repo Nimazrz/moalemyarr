@@ -46,7 +46,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_student = models.BooleanField(default=False, blank=False, null=False)
 
     # optional
-    phone = models.CharField(max_length=11, blank=True, null=True)
+    phone = models.CharField(unique=True, max_length=11, blank=True, null=True)
     email = models.EmailField(unique=True, blank=True, null=True, default=None)
     address = models.CharField(max_length=800, blank=True, null=True)
     province = models.CharField(max_length=50, blank=True, null=True)

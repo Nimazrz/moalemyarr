@@ -1,0 +1,26 @@
+{% extends 'parent/base.html' %}
+{% load static %}
+{% block title %}exam {% endblock %}
+{% block content %}
+
+    <h1>سوالات آزمون</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% for question in questions_data %}
+            <div>
+                   <h3> {{ question.question }}</h3>
+                <h4>سوال{{ question.question_number }}: {{ question.subquestion }}</h4>
+
+                {% for answer in question.answers %}
+                    <label>
+                        <input type="radio" name="question_{{ forloop.parentloop.counter }}" value="{{ answer.text }}">
+                        {{ answer.text }}
+                    </label><br>
+                {% endfor %}
+            </div>
+            <hr>
+        {% endfor %}
+        <button type="submit">ارسال پاسخ</button>
+    </form>
+
+{% endblock %}

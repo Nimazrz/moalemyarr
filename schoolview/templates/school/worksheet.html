@@ -1,0 +1,12 @@
+{% extends 'parent/base.html' %}
+{% load static %}
+{% block title %}worksheet{% endblock %}
+{% block content %}
+    {% for answer in correct_answered %}
+        {{ answer }}
+        <br>
+
+    {% endfor %}
+
+
+{% endblock %}

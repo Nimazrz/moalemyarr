@@ -175,7 +175,7 @@ class Question(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.title}(id:{self.id})"
+        return f"{self.title}"
 
     class Meta:
         db_table = 'question'
@@ -202,7 +202,7 @@ class Subquestion(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.question}"
+        return f"{self.text}"
 
     class Meta:
         db_table = 'subquestion'
@@ -345,7 +345,6 @@ class Leitner_question(models.Model):
         db_table = 'leitner'
         ordering = ['-created_at']
         verbose_name_plural = 'لایتنر، سوال'
-
 
 
 class Leitner(models.Model):
