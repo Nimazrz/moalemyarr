@@ -158,3 +158,9 @@ REST_FRAMEWORK = {
     'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 8,
 }
+
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 86400  # 1 روز
+SESSION_SAVE_EVERY_REQUEST = True  # هر درخواست، سشن را ذخیره کند
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False

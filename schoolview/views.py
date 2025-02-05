@@ -42,50 +42,60 @@ def index(request):
 
 
 def exam(request):
-    questions_data = []
-    correct_answers = {}
+    correct_answers = {}  # متغیر باید اینجا مقداردهی شود که در هر دو متد در دسترس باشد
     subquestions = Subquestion.objects.all()
 
-    for idx, subquestion in enumerate(subquestions, start=1):
-        correct_answer = Right_answer.objects.filter(subquestion=subquestion).order_by('?').first()
-        wrong_answers = list(Wrong_answer.objects.filter(subquestion=subquestion).order_by('?')[:3])
-        print(correct_answer)
-        all_answers = [correct_answer] + wrong_answers
-        random.shuffle(all_answers)
-        request.session['correct_answers'] = correct_answers
-        questions_data.append({
-            "question_number": f"{idx}",
-            "question": subquestion.question,
-            "subquestion": subquestion,
-            "answers": [{"text": ans.title, "is_correct": ans == correct_answer} for ans in all_answers]
-        })
-        correct_answers[f"question_{idx}"] = correct_answer.title
+    if request.method == 'GET':
+        print("get")
+        questions_data = []
 
-    if request.method == 'POST':
+        for idx, subquestion in enumerate(subquestions, start=1):
+            correct_answer = Right_answer.objects.filter(subquestion=subquestion).order_by('?').first()
+            wrong_answers = list(Wrong_answer.objects.filter(subquestion=subquestion).order_by('?')[:3])
+            all_answers = [correct_answer] + wrong_answers
+            random.shuffle(all_answers)
+            questions_data.append({
+                "question_number": f"{idx}",
+                "question": subquestion.question,
+                "subquestion": subquestion,
+                "answers": [{"text": ans.title, "is_correct": ans == correct_answer} for ans in all_answers]
+            })
+            correct_answers[f"question_{idx}"] = correct_answer.title
+
+        request.session['correct_answers'] = correct_answers  # ذخیره گزینه‌های صحیح در سشن
+        request.session.modified = True
+
+        print(correct_answers)
+        print("Before render:", request.session.get('correct_answers'))
+        return render(request, "school/exam.html", {"questions_data": questions_data})
+
+    elif request.method == 'POST':
+        print("post")
+        correct_answers = request.session.get('correct_answers', {})  # دریافت پاسخ‌های صحیح از سشن
         user_answers = {}
-        for idx, question in enumerate(questions_data, start=1):
-            selected_answer = request.POST.get(f"question_{idx}")
-            user_answers[f"question_{idx}"] = selected_answer
+
+        for key in correct_answers.keys():  # فقط کلیدهای پاسخ‌های صحیح را بخوان
+            selected_answer = request.POST.get(key)  # دریافت مقدار ارسال‌شده برای هر سوال
+            user_answers[key] = selected_answer
 
         request.session['user_answers'] = user_answers
+        request.session.modified = True
 
-        print("hi")
-        print(correct_answers)
         print(user_answers)
+        print("Before redirect:", request.session.get('correct_answers'))
         return redirect(reverse('schoolview:worksheet'))
 
-    return render(request, "school/exam.html", {"questions_data": questions_data})
 
 
 def make_worksheet(request):
     correct_answered = []
     wrong_answered = []
-    correct_answers = request.session.get('correct_answers')
+    correct_answers_sesh = request.session.get('correct_answers')
     user_answers = request.session.get('user_answers')
-    request.session.clear()
+    # request.session.clear()
 
     for key in user_answers:
-        if user_answers[key] == correct_answers[key]:
+        if user_answers[key] == correct_answers_sesh[key]:
             correct_answered.append(f"question_{key}")
         else:
             wrong_answered.append(f"question_{key}")
