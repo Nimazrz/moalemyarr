@@ -190,7 +190,7 @@ class Subquestion(models.Model):
     text = models.TextField(blank=True, null=True)
     question_designer = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name='questions')
     score = models.PositiveIntegerField(default=0)
-    time = models.TimeField(null=False, blank=False)
+    time = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
 
     course = models.ManyToManyField(Course, related_name='subquestions', blank=True)
     book = models.ManyToManyField(Book, related_name='subquestions', blank=True, )
@@ -312,13 +312,18 @@ class Study_report(models.Model):
 
 class Question_practice_worksheet(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='question_practice_worksheet')
-    needed_time = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
-    time = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
+    subquestion = models.ManyToManyField(Subquestion, related_name='question_practice_worksheet')
+    time_for_each_subquestion = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
     time_spent = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
     date = models.DateTimeField()
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def exam_time(cls):
+        result = cls.objects.aggregate(total_time=sum('time_for_each_subquestion'))
+        return result['total_time'] or timedelta()
 
     def __str__(self):
         return f"{self.student}"

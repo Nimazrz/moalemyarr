@@ -42,11 +42,10 @@ def index(request):
 
 
 def exam(request):
-    correct_answers = {}  # متغیر باید اینجا مقداردهی شود که در هر دو متد در دسترس باشد
+    correct_answers = {}
     subquestions = Subquestion.objects.all()
 
     if request.method == 'GET':
-        print("get")
         questions_data = []
 
         for idx, subquestion in enumerate(subquestions, start=1):
@@ -62,29 +61,22 @@ def exam(request):
             })
             correct_answers[f"question_{idx}"] = correct_answer.title
 
-        request.session['correct_answers'] = correct_answers  # ذخیره گزینه‌های صحیح در سشن
+        request.session['correct_answers'] = correct_answers
         request.session.modified = True
 
-        print(correct_answers)
-        print("Before render:", request.session.get('correct_answers'))
         return render(request, "school/exam.html", {"questions_data": questions_data})
 
     elif request.method == 'POST':
-        print("post")
-        correct_answers = request.session.get('correct_answers', {})  # دریافت پاسخ‌های صحیح از سشن
+        correct_answers = request.session.get('correct_answers', {})
         user_answers = {}
 
-        for key in correct_answers.keys():  # فقط کلیدهای پاسخ‌های صحیح را بخوان
-            selected_answer = request.POST.get(key)  # دریافت مقدار ارسال‌شده برای هر سوال
+        for key in correct_answers.keys():
+            selected_answer = request.POST.get(key)
             user_answers[key] = selected_answer
 
         request.session['user_answers'] = user_answers
         request.session.modified = True
-
-        print(user_answers)
-        print("Before redirect:", request.session.get('correct_answers'))
         return redirect(reverse('schoolview:worksheet'))
-
 
 
 def make_worksheet(request):
@@ -92,7 +84,7 @@ def make_worksheet(request):
     wrong_answered = []
     correct_answers_sesh = request.session.get('correct_answers')
     user_answers = request.session.get('user_answers')
-    # request.session.clear()
+    request.session.clear()
 
     for key in user_answers:
         if user_answers[key] == correct_answers_sesh[key]:

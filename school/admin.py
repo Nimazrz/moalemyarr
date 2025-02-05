@@ -1,5 +1,5 @@
 from django.contrib import admin
-
+from .forms import SubquestionAdminForm
 from account.models import Student
 from .models import *
 
@@ -86,7 +86,7 @@ class StudyReportAdmin(admin.ModelAdmin):
 
 @admin.register(Question_practice_worksheet)
 class QuestionPracticeWorksheetAdmin(admin.ModelAdmin):
-    list_display = ('student', 'needed_time', 'time_spent')
+    list_display = ('student', 'time_spent')
 
 
 @admin.register(Leitner_question)
