@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}exam {% endblock %}
 {% block content %}
-
+<!-- 
     <h1>سوالات آزمون</h1>
     <form method="post">
         {% csrf_token %}
@@ -21,6 +21,26 @@
             <hr>
         {% endfor %}
         <button type="submit">ارسال پاسخ</button>
-    </form>
+    </form> -->
+
+    <form method="post">
+        {% csrf_token %}
+        {% for key,value in questions_data.items %}
+            <div>
+                   <h3> {{ value.question_text }}</h3>
+                <h4>سوال:{{ value.question_number }} {{ value.subquestion_text }}</h4>
+
+                {% for answer in value.answers %}
+                    <label>
+                        <input type="radio" name="question_{{ forloop.parentloop.counter }}" value="{{ answer.text }}">
+                        {{ answer.text }}
+                    </label><br>
+                {% endfor %}
+            </div>
+            <hr>
+        {% endfor %}
+        <button type="submit">ارسال پاسخ</button>
+    </form> 
+
 
 {% endblock %}
