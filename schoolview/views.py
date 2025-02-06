@@ -8,7 +8,8 @@ from urllib.parse import urlencode
 from django.forms.models import model_to_dict
 from datetime import datetime, date, timedelta
 from django.db.models.fields.files import ImageFieldFile, FileField
-
+from django.contrib.auth.decorators import login_required
+from datetime import date
 
 def register(request):
     if request.method == 'POST':
@@ -54,6 +55,8 @@ def serialize_model(model_instance):
     model_dict = model_to_dict(model_instance)  # Convert model to dict
     return {key: serialize_value(value) for key, value in model_dict.items()}  # Serialize all values
 
+
+@login_required
 def exam(request):
 
     correct_answers = {}
@@ -99,14 +102,16 @@ def exam(request):
         request.session.modified = True
 
         return redirect(reverse('schoolview:worksheet'))
+    
 
+@login_required(login_url='/exam/')
 def make_worksheet(request):
     correct_answered = {}
     wrong_answered = {}
     questions_data = request.session.get('questions_data')
     correct_answers_sesh = request.session.get('correct_answers')
     user_answers = request.session.get('user_answers')
-    request.session.clear()
+    # request.session.clear()
 
     for key in user_answers:
         if user_answers[key] == correct_answers_sesh[key]:
@@ -117,12 +122,42 @@ def make_worksheet(request):
     
     all_time = sum(float(q["subquestion_time"]) for q in questions_data.values())
 
-
+    wrong_answers_wothot_corrects = [key for key in wrong_answered if key.startswith('correct_answer_')]
     context = {
         'correct_answered': correct_answered,
         'wrong_answered': wrong_answered,
         'correct_answered_count': len(correct_answered),
-        'wrong_answers_count': len(wrong_answered),
+        'wrong_answered_count': len(wrong_answers_wothot_corrects),
         'all_time':all_time,
+        'darsad': ((len(correct_answered))/(len(correct_answered)+len(wrong_answers_wothot_corrects)))*100,
     }
     return render(request, 'school/worksheet.html', context)
+
+
+from django.http import JsonResponse
+from school.models import Student, Question_practice_worksheet
+
+def save_worksheet(request):
+    if request.method == "POST":
+        student = request.user
+
+        try:
+            # بررسی اینکه آیا کاربر لاگین کرده است
+            if not student.is_authenticated:
+                return JsonResponse({"error": "User is not authenticated"}, status=401)
+
+            # گرفتن نمونه `Student` از روی `request.user`
+            student = Student.objects.filter(student=student).first()
+            if not student:
+                return JsonResponse({"error": "Student profile not found"}, status=404)
+
+            # ذخیره Worksheet
+            worksheet = Question_practice_worksheet.objects.create(student=student)
+            worksheet.save()
+
+            return JsonResponse({"message": "Worksheet saved successfully!"}, status=201)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)

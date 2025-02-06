@@ -5,7 +5,10 @@
 
     <h3>پاسخ های درست </h3>
     {% for key, value in correct_answered.items %}
-        {{ key }} : {{ value }}
+
+        <div style="color: green;">{{ key }} : {{ value }}</div>
+
+        
         <br>
         {% empty %}
         <h6>به هیچکدام از سوال ها پاسخ صحیح نداده اید</h6>
@@ -15,13 +18,24 @@
     <h3>پاسخ های غلط</h3>
     {% for key, value in wrong_answered.items %}
 
-        <div>{{ key }} : {{ value }}</div>
+        <div style="color: red;">{{ key }} : {{ value }}</div>
         <br>
         {% empty %}
         <h6>به هیچکدام از سوال ها پاسخ غلط نداده اید</h6>
 
     {% endfor %}
 
-    {{ all_time }}
+    <div>
+        <div> زمان امتحان:{{ all_time }}ثانیه</div>
+        <div>تعداد سوالات درست: {{ correct_answered_count }}</div>
+        <div>تعداد سوالات غلط: {{ wrong_answered_count }}</div>
+        <div>درصد این ازمون: %{{ darsad }}</div>
+    </div>  
+    
+    <form action="{% url 'schoolview:save_worksheet' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">ذخیره کارنامه</button>
+    </form>
+
 
 {% endblock %}

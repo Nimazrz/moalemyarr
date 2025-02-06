@@ -11,5 +11,6 @@ urlpatterns = [
 
     path('exam/', views.exam, name='exam'),
     path('worksheet/', views.make_worksheet, name='worksheet'),
+    path('save_worksheet/', views.save_worksheet, name='save_worksheet'),
 
 ]

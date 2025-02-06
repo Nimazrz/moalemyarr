@@ -312,10 +312,10 @@ class Study_report(models.Model):
 
 class Question_practice_worksheet(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='question_practice_worksheet')
-    subquestion = models.ManyToManyField(Subquestion, related_name='question_practice_worksheet')
-    time_for_each_subquestion = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
-    time_spent = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
-    date = models.DateTimeField()
+    # subquestion = models.ManyToManyField(Subquestion, related_name='question_practice_worksheet')
+    time_for_each_subquestion = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0), blank=True, null=True)
+    time_spent = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0), blank=True, null=True)
+    date = models.DateTimeField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
