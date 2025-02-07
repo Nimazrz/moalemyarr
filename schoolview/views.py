@@ -4,12 +4,12 @@ from school.models import *
 from django.contrib.auth import logout
 from schoolview.forms import UserRegisterForm
 import random
-from urllib.parse import urlencode
 from django.forms.models import model_to_dict
 from datetime import datetime, date, timedelta
 from django.db.models.fields.files import ImageFieldFile, FileField
 from django.contrib.auth.decorators import login_required
-from datetime import date
+from django.http import JsonResponse
+
 
 def register(request):
     if request.method == 'POST':
@@ -38,6 +38,7 @@ def index(request):
     }
     return render(request, 'school/index.html', context)
 
+
 def serialize_value(value):
     """Convert non-serializable objects to JSON-serializable formats."""
     if isinstance(value, datetime):
@@ -50,6 +51,7 @@ def serialize_value(value):
         return value.url if value else None  # Get file URL or return None
     return value  # Keep other types as is
 
+
 def serialize_model(model_instance):
     """Convert a Django model instance into a JSON-serializable dictionary."""
     model_dict = model_to_dict(model_instance)  # Convert model to dict
@@ -58,12 +60,13 @@ def serialize_model(model_instance):
 
 @login_required
 def exam(request):
-
     correct_answers = {}
     subquestions = Subquestion.objects.all()
 
     if request.method == 'GET':
         questions_data = {}
+        exam_data = {}
+        total_time = 0
 
         for idx, subquestion in enumerate(subquestions, start=1):
             correct_answer = Right_answer.objects.filter(subquestion=subquestion).order_by('?').first()
@@ -74,16 +77,20 @@ def exam(request):
             key = f"question_{idx}"
             questions_data[key] = {
                 "subquestion_number": str(idx),
+                'subquestion_id': subquestion.id,
                 "question_text": subquestion.question.title,
                 "subquestion_text": subquestion.text,
                 # "subquestin": serialize_model(subquestion),
                 "subquestion_image": serialize_value(subquestion.image),
-                "subquestion_time": serialize_value(subquestion.time),
+                "subquestion_time": subquestion.time,
+
                 "answers": [{"text": ans.title, "is_correct": ans == correct_answer} for ans in all_answers]
             }
 
+            total_time += subquestion.time
             correct_answers[key] = correct_answer.title
-
+        exam_data['total_time'] = total_time
+        request.session['exam_data'] = exam_data
         request.session['questions_data'] = questions_data
         request.session['correct_answers'] = correct_answers
         request.session.modified = True
@@ -102,16 +109,16 @@ def exam(request):
         request.session.modified = True
 
         return redirect(reverse('schoolview:worksheet'))
-    
+
 
 @login_required(login_url='/exam/')
 def make_worksheet(request):
     correct_answered = {}
     wrong_answered = {}
+    exam_data = request.session.get('exam_data')
     questions_data = request.session.get('questions_data')
     correct_answers_sesh = request.session.get('correct_answers')
     user_answers = request.session.get('user_answers')
-    # request.session.clear()
 
     for key in user_answers:
         if user_answers[key] == correct_answers_sesh[key]:
@@ -119,45 +126,72 @@ def make_worksheet(request):
         else:
             wrong_answered[f"{key}"] = user_answers[f"{key}"]
             wrong_answered[f"correct_answer_{key}"] = correct_answers_sesh[f"{key}"]
-    
-    all_time = sum(float(q["subquestion_time"]) for q in questions_data.values())
 
-    wrong_answers_wothot_corrects = [key for key in wrong_answered if key.startswith('correct_answer_')]
+    wrong_answers_without_corrects = [key for key in wrong_answered if key.startswith('correct_answer_')]
     context = {
         'correct_answered': correct_answered,
         'wrong_answered': wrong_answered,
         'correct_answered_count': len(correct_answered),
-        'wrong_answered_count': len(wrong_answers_wothot_corrects),
-        'all_time':all_time,
-        'darsad': ((len(correct_answered))/(len(correct_answered)+len(wrong_answers_wothot_corrects)))*100,
+        'wrong_answered_count': len(wrong_answers_without_corrects),
+        'exam_data': exam_data,
+        'darsad': ((len(correct_answered)) / (len(correct_answered) + len(wrong_answers_without_corrects))) * 100,
     }
     return render(request, 'school/worksheet.html', context)
 
 
-from django.http import JsonResponse
-from school.models import Student, Question_practice_worksheet
-
 def save_worksheet(request):
     if request.method == "POST":
-        student = request.user
+        exam_data = request.session.get('exam_data')
+        questions_data = request.session.get('questions_data')
+        studentt = request.user
+        student = Student.objects.get(student=studentt)
+        worksheet = Question_practice_worksheet.objects.get(student=student, date=date.today())
+        # save_practice
+        for key, value in questions_data.items():
+            subquestion = Subquestion.objects.get(id=questions_data[key]['subquestion_id'])
+            if not Practice.objects.filter(subquestion__id=subquestion):
 
-        try:
-            # بررسی اینکه آیا کاربر لاگین کرده است
-            if not student.is_authenticated:
-                return JsonResponse({"error": "User is not authenticated"}, status=401)
+                practice = Practice.objects.create(
+                    zero=2,
+                    nf=5,
+                    nt=3,
+                    date=date.today()
+                )
+                practice.student.add(student)
+                practice.subquestion.add(subquestion)
+                practice.save()
 
-            # گرفتن نمونه `Student` از روی `request.user`
-            student = Student.objects.filter(student=student).first()
-            if not student:
-                return JsonResponse({"error": "Student profile not found"}, status=404)
 
-            # ذخیره Worksheet
-            worksheet = Question_practice_worksheet.objects.create(student=student)
+
+
+
+
+
+
+
+        # save_worksheet
+        if not worksheet:
+            try:
+                if not studentt.is_authenticated:
+                    return JsonResponse({"error": "User is not authenticated"}, status=401)
+
+                if not student:
+                    return JsonResponse({"error": "Student profile not found"}, status=404)
+
+                worksheet = Question_practice_worksheet.objects.create(student=student,
+                                                                       total_time=questions_data['total_time'],
+                                                                       date=date.today())
+                worksheet.save()
+
+                return HttpResponse({"Worksheet saved successfully!"})
+
+            except Exception as e:
+                return JsonResponse({"error": str(e)}, status=500)
+
+        else:
+            worksheet.total_time += exam_data['total_time']
+            worksheet.time_spent += 20
             worksheet.save()
-
-            return JsonResponse({"message": "Worksheet saved successfully!"}, status=201)
-
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+            return HttpResponse({"Worksheet updated successfully for today!"})
 
     return JsonResponse({"error": "Invalid request method"}, status=405)

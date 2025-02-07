@@ -190,7 +190,7 @@ class Subquestion(models.Model):
     text = models.TextField(blank=True, null=True)
     question_designer = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name='questions')
     score = models.PositiveIntegerField(default=0)
-    time = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
+    time = models.PositiveIntegerField(default=0)
 
     course = models.ManyToManyField(Course, related_name='subquestions', blank=True)
     book = models.ManyToManyField(Book, related_name='subquestions', blank=True, )
@@ -260,7 +260,7 @@ class Practice(models.Model):
     zero = models.PositiveIntegerField(default=0)
     nf = models.PositiveIntegerField(default=0)
     nt = models.PositiveIntegerField(default=0)
-    date = models.DateTimeField()
+    date = models.DateField()
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -295,7 +295,7 @@ class Course_prerequisite(models.Model):
 class Study_report(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='study_report')
     social = models.ForeignKey(Social, on_delete=models.CASCADE, related_name='study_report')
-    time = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0))
+    time = models.PositiveIntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -313,9 +313,9 @@ class Study_report(models.Model):
 class Question_practice_worksheet(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='question_practice_worksheet')
     # subquestion = models.ManyToManyField(Subquestion, related_name='question_practice_worksheet')
-    time_for_each_subquestion = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0), blank=True, null=True)
-    time_spent = models.DurationField(default=timedelta(hours=0, minutes=0, seconds=0), blank=True, null=True)
-    date = models.DateTimeField(blank=True, null=True)
+    total_time = models.PositiveIntegerField(default=0, blank=True, null=True)
+    time_spent = models.PositiveIntegerField(default=0, blank=True, null=True)
+    date = models.DateField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
