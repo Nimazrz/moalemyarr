@@ -9,6 +9,8 @@ from datetime import datetime, date, timedelta
 from django.db.models.fields.files import ImageFieldFile, FileField
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.core.exceptions import ObjectDoesNotExist
+
 
 
 def register(request):
@@ -126,6 +128,9 @@ def make_worksheet(request):
         else:
             wrong_answered[f"{key}"] = user_answers[f"{key}"]
             wrong_answered[f"correct_answer_{key}"] = correct_answers_sesh[f"{key}"]
+    
+    request.session['wrong_answered'] = wrong_answered
+    request.session['correct_answered'] = correct_answered
 
     wrong_answers_without_corrects = [key for key in wrong_answered if key.startswith('correct_answer_')]
     context = {
@@ -145,32 +150,52 @@ def save_worksheet(request):
         questions_data = request.session.get('questions_data')
         studentt = request.user
         student = Student.objects.get(student=studentt)
-        worksheet = Question_practice_worksheet.objects.get(student=student, date=date.today())
+        worksheet = Question_practice_worksheet.objects.filter(student=student, date=date.today()).first()
+     
         # save_practice
+        try:
+            correct_answered = request.session.get('correct_answered', [])
+        except AttributeError:
+            correct_answered = {}
+            return correct_answered
+
         for key, value in questions_data.items():
             subquestion = Subquestion.objects.get(id=questions_data[key]['subquestion_id'])
-            if not Practice.objects.filter(subquestion__id=subquestion):
+            correct_answers_from_db = list(Right_answer.objects.filter(subquestion=subquestion).values_list('title', flat=True))
+            existing_practice = Practice.objects.filter(subquestion=subquestion).first()
+        
+            if not existing_practice:
 
-                practice = Practice.objects.create(
-                    zero=2,
-                    nf=5,
-                    nt=3,
+                nt = nf = 0
+                try:
+                    if correct_answered[key] in correct_answers_from_db:
+                        nt+=1
+                        
+                except KeyError:
+                    nf +=1
+
+                new_practice = Practice.objects.create(
+                    zero=0,
+                    nf=nf,
+                    nt=nt,
                     date=date.today()
                 )
-                practice.student.add(student)
-                practice.subquestion.add(subquestion)
-                practice.save()
-
-
-
-
-
-
-
-
-
+                new_practice.student.add(student)
+                new_practice.subquestion.add(subquestion)
+                new_practice.save()
+            else:
+                try:
+                    if correct_answered[key] in correct_answers_from_db:
+                        existing_practice.nt+=1
+                        existing_practice.save()
+                        
+                except KeyError:
+                    existing_practice.nf +=1
+                    existing_practice.save()
+                    
         # save_worksheet
         if not worksheet:
+            
             try:
                 if not studentt.is_authenticated:
                     return JsonResponse({"error": "User is not authenticated"}, status=401)
@@ -179,7 +204,7 @@ def save_worksheet(request):
                     return JsonResponse({"error": "Student profile not found"}, status=404)
 
                 worksheet = Question_practice_worksheet.objects.create(student=student,
-                                                                       total_time=questions_data['total_time'],
+                                                                       total_time=exam_data['total_time'],
                                                                        date=date.today())
                 worksheet.save()
 
