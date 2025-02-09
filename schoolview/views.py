@@ -61,8 +61,7 @@ def exam(request):
      total_calculation=ExpressionWrapper(
         (((F('practice__zero')*2)-1)*(F('practice__nf')+F('practice__nt'))),
         output_field=IntegerField())
-    ).order_by('total_calculation')
-    
+    ).order_by('-total_calculation')
     if request.method == 'GET':
         questions_data = {}
         exam_data = {"total_time": 0}
