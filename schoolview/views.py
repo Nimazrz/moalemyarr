@@ -1,15 +1,16 @@
-from django.shortcuts import render, redirect, get_object_or_404, reverse
+from django.shortcuts import render, redirect, reverse
 from django.http import HttpResponse
 from school.models import *
 from django.contrib.auth import logout
 from schoolview.forms import UserRegisterForm
 import random
-from django.forms.models import model_to_dict
 from datetime import datetime, date, timedelta
 from django.db.models.fields.files import ImageFieldFile, FileField
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import F, ExpressionWrapper, IntegerField
+
 
 
 
@@ -56,7 +57,11 @@ def serialize_value(value):
 
 @login_required
 def exam(request):
-    subquestions = Subquestion.objects.all()
+    subquestions = Subquestion.objects.annotate(
+     total_calculation=ExpressionWrapper(
+        (((F('practice__zero')*2)-1)*(F('practice__nf')+F('practice__nt'))),
+        output_field=IntegerField())
+    ).order_by('total_calculation')
     
     if request.method == 'GET':
         questions_data = {}
