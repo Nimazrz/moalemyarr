@@ -188,11 +188,11 @@ def save_worksheet(request):
     worksheet.total_time += exam_data.get('total_time', 0)
     worksheet.time_spent += 20
     worksheet.save()
-    # request.session.pop('exam_data', None)
-    # request.session.pop('questions_data', None)
-    # request.session.pop('correct_answers', None)
-    # request.session.pop('user_answers', None)
-    # request.session.pop('wrong_answered', None)
-    # request.session.pop('correct_answered', None)
+    request.session.pop('exam_data', None)
+    request.session.pop('questions_data', None)
+    request.session.pop('correct_answers', None)
+    request.session.pop('user_answers', None)
+    request.session.pop('wrong_answered', None)
+    request.session.pop('correct_answered', None)
     
     return HttpResponse({"Worksheet saved successfully!"})
