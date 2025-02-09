@@ -70,7 +70,7 @@ class SubquestionAdmin(admin.ModelAdmin):
 
 @admin.register(Practice)
 class PracticeAdmin(admin.ModelAdmin):
-    list_display = ('nf', 'nt')
+    list_display = ('nf', 'nt', 'zero')
 
 
 @admin.register(Course_prerequisite)
