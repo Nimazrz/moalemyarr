@@ -196,3 +196,9 @@ def save_worksheet(request):
     request.session.pop('correct_answered', None)
     
     return HttpResponse({"Worksheet saved successfully!"})
+
+
+def litner(request):
+    qusetions = Subquestion.objects.all()
+    for question in qusetions:
+        pass

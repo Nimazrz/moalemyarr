@@ -3,6 +3,8 @@ from django.db import models
 from account.models import Question_designer, CustomUser, Student
 from datetime import timedelta
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
+
 
 
 # Create your models here.
@@ -191,6 +193,7 @@ class Subquestion(models.Model):
     question_designer = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name='questions')
     score = models.PositiveIntegerField(default=0)
     time = models.PositiveIntegerField(default=0)
+    n = models.PositiveIntegerField()
 
     course = models.ManyToManyField(Course, related_name='subquestions', blank=True)
     book = models.ManyToManyField(Book, related_name='subquestions', blank=True, )
@@ -336,9 +339,10 @@ class Question_practice_worksheet(models.Model):
 
 
 class Leitner_question(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='Leitner_question')
-    subquestion = models.ForeignKey(Subquestion, on_delete=models.CASCADE, related_name='Leitner_question')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='leitner_question')
+    subquestion = models.ForeignKey(Subquestion, on_delete=models.CASCADE, related_name='leitner_question')
     n = models.IntegerField(validators=[MinValueValidator(-1), MaxValueValidator(31)])
+    datelq = models.DateField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -353,8 +357,9 @@ class Leitner_question(models.Model):
 
 
 class Leitner(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='Littler')
-    last_step = models.PositiveIntegerField(default=0)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='leitner')
+    last_step = models.PositiveIntegerField(default=1)
+    datel = models.DateField(default=timezone.now().date() - timezone.timedelta(days=1))
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
