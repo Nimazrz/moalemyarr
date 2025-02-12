@@ -2,10 +2,8 @@
 {% load static %}
 {% block title %}exam {% endblock %}
 {% block content %}
-
-    <h1>سوالات آزمون</h1>
-
-    <form method="post">
+{{ leitner }}
+   <form method="post">
         {% csrf_token %}
         {% for key,value in questions_data.items %}
             <div>
@@ -22,7 +20,6 @@
             <hr>
         {% endfor %}
         <button type="submit">ارسال پاسخ</button>
-    </form> 
-
+    </form>
 
 {% endblock %}

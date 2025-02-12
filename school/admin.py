@@ -64,7 +64,7 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(Subquestion)
 class SubquestionAdmin(admin.ModelAdmin):
-    list_display = ('question', 'question_designer')
+    list_display = ('id', 'question_designer')
     inlines = [RightAnswerInline, WrongAnswerInline]
 
 
