@@ -203,58 +203,99 @@ def save_worksheet(request):
 
 
 class LeitnerView(View):
-    questions_data = {}
-    correct_answers = {}
+    def __init__(self):
+        super().__init__()
+        self.questions_data = {}
+        self.correct_answers = {}
+
+    def upgrade_subquestions(self, student):
+        leitner = Leitner.objects.filter(student=student).first()
+        leitner_questions = []
+        leitner_question = None
+
+        if leitner.last_step == 1:
+            print(1)
+            leitner_questions = Leitner_question.objects.filter(n__range=(15, 29))
+        elif leitner.last_step == 2:
+            print(2)
+            leitner_questions = Leitner_question.objects.filter(n__range=(7, 14))
+        elif leitner.last_step == 3:
+            print(3)
+            leitner_questions = Leitner_question.objects.filter(n__range=(3, 6))
+        elif leitner.last_step == 4:
+            print(4)
+            leitner_question = Leitner_question.objects.filter(n=1).first()
+        elif leitner.last_step == 5:
+            print(5)
+            leitner_question = Leitner_question.objects.filter(n=-1).first()
+
+        if leitner_questions:  # اگر لیست سوالات خالی نیست
+            for question in leitner_questions:
+                question.n += 1
+                question.save()
+        elif leitner_question:  # اگر کوئری‌ست خالی نیست
+            leitner_question = leitner_question.first()  # مقدار اول را بگیر
+            leitner_question.n += 1
+            leitner_question.save()
 
     def get(self, request):
 
         student = Student.objects.get(student=request.user)
         try:
             leitner, created = Leitner.objects.get_or_create(student=student)
-            # leitner_question, created = Leitner_question.objects.get_or_create(student=student)
         except KeyError:
             return HttpResponse({"error": "leitner not found"}, status=404)
 
+        # find student  personal leitner
         if leitner.last_step == 1 and leitner.datel == date.today():
-            raise ValueError("you have done your letner for today your leitner more than one time in a day")
+            return HttpResponse({"error": "you have done your letner for today"}, status=404)
 
         numbers = (30, 14, 6, 2, 0)
         if leitner.last_step > 5:
             leitner.last_step = 1
             leitner.datel = date.today()
+            # add upgrades here
+            self.upgrade_subquestions(student)
             leitner.save()
-            return messages.error(request, "you have done your letner for today!")
-
+            return redirect('schoolview:index')
         subquestions = Subquestion.objects.filter(leitner_question__n=numbers[(leitner.last_step) - 1])
 
+        # if not subquestions:
+        #     try:
+        #         subquestions = Subquestion.objects.filter(leitner_question__n=numbers[leitner.last_step])
+        #     except (IndexError, ValueError):
+        #         pass
+        #     leitner.last_step += 1
+        #     leitner.save()
+        #     return redirect("schoolview:leitner")
+
         if not subquestions:
-            try:
-                subquestions = Subquestion.objects.filter(leitner_question__n=numbers[leitner.last_step])
-            except (IndexError, ValueError):
-                pass
+            self.upgrade_subquestions(student)
             leitner.last_step += 1
+            leitner.datel = date.today()
             leitner.save()
-            return redirect("schoolview:leitner")
+            return redirect('schoolview:leitner')
+        else:
+            for idx, subquestion in enumerate(subquestions, start=1):
+                correct_answer = Right_answer.objects.filter(subquestion=subquestion).order_by('?').first()
+                wrong_answers = list(Wrong_answer.objects.filter(subquestion=subquestion).order_by('?')[:3])
+                all_answers = [correct_answer] + wrong_answers
+                random.shuffle(all_answers)
 
-        for idx, subquestion in enumerate(subquestions, start=1):
-            correct_answer = Right_answer.objects.filter(subquestion=subquestion).order_by('?').first()
-            wrong_answers = list(Wrong_answer.objects.filter(subquestion=subquestion).order_by('?')[:3])
-            all_answers = [correct_answer] + wrong_answers
-            random.shuffle(all_answers)
-
-            key = f"question_{idx}"
-            self.questions_data[key] = {
-                "subquestion_number": str(idx),
-                "subquestion_id": subquestion.id,
-                "question_text": subquestion.question.title,
-                "subquestion_text": subquestion.text,
-                "subquestion_image": serialize_value(subquestion.image),
-                "answers": [{"text": ans.title, "is_correct": ans == correct_answer} for ans in all_answers]
-            }
-            self.correct_answers[key] = correct_answer.title
-            request.session['questions_data'] = self.questions_data
-            request.session['correct_answers'] = self.correct_answers
-        return render(request, "school/leitner.html", {'questions_data': self.questions_data,
+                key = f"question_{idx}"
+                self.questions_data[key] = {
+                    "subquestion_number": str(idx),
+                    "subquestion_id": subquestion.id,
+                    "question_text": subquestion.question.title,
+                    "subquestion_text": subquestion.text,
+                    "subquestion_image": serialize_value(subquestion.image),
+                    "answers": [{"text": ans.title, "is_correct": ans == correct_answer} for ans in all_answers]
+                }
+                self.correct_answers[key] = correct_answer.title
+                request.session['questions_data'] = self.questions_data
+                request.session['correct_answers'] = self.correct_answers
+                print(leitner.last_step)
+            return render(request, "school/leitner.html", {'questions_data': self.questions_data,
                                                        'leitner': leitner.last_step, })
 
     def post(self, request):
@@ -264,6 +305,7 @@ class LeitnerView(View):
         user_answers = {key: request.POST.get(key) for key in request.session.get('correct_answers', {})}
         for key1, value1 in user_answers.items():
             for key2, value2 in correct_answers.items():
+                print("heloo")
 
                 practice = Practice.objects.filter(subquestion__id=questions_data[key2]['subquestion_id']).first()
 
@@ -284,28 +326,7 @@ class LeitnerView(View):
                     leitner_question.datelq = date.today()
                     leitner_question.save()
 
-                    # leitner_questions = None
-
-                    if leitner.last_step == 1:
-                        print(1)
-                        leitner_questions = Leitner_question.objects.filter(n__gt=14, n__lt=30)
-                    elif leitner.last_step == 2:
-                        print(2)
-                        leitner_questions = Leitner_question.objects.filter(n__lt=6, n__gt=14)
-                    elif leitner.last_step == 3:
-                        print(3)
-                        leitner_questions = Leitner_question.objects.filter(n__lt=2, n__gt=6)
-                    elif leitner.last_step == 4:
-                        print(4)
-                        leitner_questions = Leitner_question.objects.filter(n=1)
-                    elif leitner.last_step == 5:
-                        print(5)
-                        leitner_questions = Leitner_question.objects.filter(n=-1)
-
-
-                    for leitner_question in leitner_questions:
-                        leitner_question.n += 1
-                        leitner_question.save()
+                    self.upgrade_subquestions(student)
 
                     leitner.last_step += 1
                     leitner.datel = date.today()
