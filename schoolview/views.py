@@ -8,10 +8,8 @@ from datetime import datetime, date, timedelta
 from django.db.models.fields.files import ImageFieldFile, FileField
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import F, ExpressionWrapper, IntegerField, Case, When, Value
+from django.db.models import F, ExpressionWrapper, IntegerField
 from django.views import View
-from django.contrib import messages
 
 
 def register(request):
@@ -345,3 +343,21 @@ class LeitnerView(View):
                     self.upgrade_subquestions(student)
 
         return redirect('schoolview:leitner')
+
+
+def profile(request, user_id):
+    student = Student.objects.get(student=request.user)
+    leitner = Leitner.objects.filter(student=student).first()
+    leitner_question=Leitner_question.objects.filter(student=student)
+    question_practice_worksheet=Question_practice_worksheet.objects.filter(student=student)
+    current_date = date.today()
+
+    context = {
+        'student' : student,
+        'leitner' : leitner,
+        'leitner_question' : leitner_question,
+        'question_practice_worksheet' : question_practice_worksheet,
+        'current_date' : current_date,
+    }
+    return render(request, 'school/profile.html', context)
+
