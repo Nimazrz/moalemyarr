@@ -214,29 +214,31 @@ class LeitnerView(View):
         leitner_question = None
 
         if leitner.last_step == 1:
-            print(1)
             leitner_questions = Leitner_question.objects.filter(n__range=(15, 29))
         elif leitner.last_step == 2:
-            print(2)
             leitner_questions = Leitner_question.objects.filter(n__range=(7, 14))
         elif leitner.last_step == 3:
-            print(3)
             leitner_questions = Leitner_question.objects.filter(n__range=(3, 6))
         elif leitner.last_step == 4:
-            print(4)
             leitner_question = Leitner_question.objects.filter(n=1).first()
         elif leitner.last_step == 5:
-            print(5)
             leitner_question = Leitner_question.objects.filter(n=-1).first()
 
-        if leitner_questions:  # اگر لیست سوالات خالی نیست
-            for question in leitner_questions:
-                question.n += 1
-                question.save()
-        elif leitner_question:  # اگر کوئری‌ست خالی نیست
-            leitner_question = leitner_question.first()  # مقدار اول را بگیر
-            leitner_question.n += 1
-            leitner_question.save()
+        if leitner_questions:
+            try:
+                for question in leitner_questions:
+                    question.n += 1
+                    question.save()
+            except AttributeError:
+                pass
+
+        elif leitner_question:
+            try:
+                leitner_question = leitner_question.first()
+                leitner_question.n += 1
+                leitner_question.save()
+            except AttributeError:
+                pass
 
     def get(self, request):
 
@@ -259,15 +261,6 @@ class LeitnerView(View):
             leitner.save()
             return redirect('schoolview:index')
         subquestions = Subquestion.objects.filter(leitner_question__n=numbers[(leitner.last_step) - 1])
-
-        # if not subquestions:
-        #     try:
-        #         subquestions = Subquestion.objects.filter(leitner_question__n=numbers[leitner.last_step])
-        #     except (IndexError, ValueError):
-        #         pass
-        #     leitner.last_step += 1
-        #     leitner.save()
-        #     return redirect("schoolview:leitner")
 
         if not subquestions:
             self.upgrade_subquestions(student)
@@ -294,50 +287,61 @@ class LeitnerView(View):
                 self.correct_answers[key] = correct_answer.title
                 request.session['questions_data'] = self.questions_data
                 request.session['correct_answers'] = self.correct_answers
-                print(leitner.last_step)
             return render(request, "school/leitner.html", {'questions_data': self.questions_data,
-                                                       'leitner': leitner.last_step, })
+                                                           'leitner': leitner.last_step, })
 
     def post(self, request):
         student = Student.objects.get(student=request.user)
         questions_data = request.session.get("questions_data")
         correct_answers = request.session.get("correct_answers")
         user_answers = {key: request.POST.get(key) for key in request.session.get('correct_answers', {})}
-        for key1, value1 in user_answers.items():
-            for key2, value2 in correct_answers.items():
-                print("heloo")
+        for key in user_answers:
+            if key in correct_answers:  # Ensure the key exists in both dictionaries
 
-                practice = Practice.objects.filter(subquestion__id=questions_data[key2]['subquestion_id']).first()
+                value1 = user_answers[key]
+                value2 = correct_answers[key]
+
+                practice = Practice.objects.filter(subquestion__id=questions_data[key]['subquestion_id']).first()
 
                 leitner_question = Leitner_question.objects.get(
-                    subquestion_id=questions_data[key2]['subquestion_id']
+                    subquestion_id=questions_data[key]['subquestion_id']
                 )
 
                 leitner = Leitner.objects.filter(student=student).first()
-                leitner_questions = []
+
                 if value1 == value2:
                     # practice
                     practice.zero = 0
                     practice.nt += 1
                     practice.date = date.today()
                     practice.save()
+
                     # leitner_question
                     leitner_question.n += 1
                     leitner_question.datelq = date.today()
                     leitner_question.save()
 
-                    self.upgrade_subquestions(student)
-
                     leitner.last_step += 1
                     leitner.datel = date.today()
                     leitner.save()
+
+                    self.upgrade_subquestions(student)
                 else:
+                    # practice
                     practice.zero += 1
                     practice.nf += 1
                     practice.date = date.today()
                     practice.save()
-                    #
-                    #
-                    #
+
+                    # leitner_question
+                    leitner_question.n = 0
+                    leitner_question.datelq = date.today()
+                    leitner_question.save()
+
+                    leitner.last_step += 1
+                    leitner.datel = date.today()
+                    leitner.save()
+
+                    self.upgrade_subquestions(student)
 
         return redirect('schoolview:leitner')
