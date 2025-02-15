@@ -346,7 +346,7 @@ class LeitnerView(View):
 
 
 def profile(request, user_id):
-    student = Student.objects.get(student=request.user)
+    student = Student.objects.get(student=user_id)
     leitner = Leitner.objects.filter(student=student).first()
     leitner_question=Leitner_question.objects.filter(student=student)
     question_practice_worksheet=Question_practice_worksheet.objects.filter(student=student)

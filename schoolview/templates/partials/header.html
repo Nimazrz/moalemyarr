@@ -1,5 +1,15 @@
-{% if request.user.is_authenticated %}
-    <a href="{% url 'schoolview:profile' user.id %}">{{ request.user.username }}</a>
-
-{% endif %}
-<hr>
+<header class="site-header">
+    <div class="header-container">
+        <div class="logo">
+            <a href="/">Moalemyar</a> <!-- لینک به صفحه اصلی -->
+        </div>
+        <nav class="user-menu">
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'schoolview:profile' user.id %}" class="profile-link">{{ request.user.username }}</a>
+            {% else %}
+                <a href="{% url 'schoolview:login' %}" class="login-link">Login</a>
+            {% endif %}
+        </nav>
+    </div>
+    <hr class="header-divider">
+</header>

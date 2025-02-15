@@ -1,0 +1,22 @@
+{% extends 'parent/base.html' %}
+{% load static %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="profile-container">
+    <div class="profile-box">
+        <h1 class="profile-title">Welcome to Your Profile</h1>
+
+        <div class="leitner-section">
+            {% if leitner.datel != current_date %}
+                <a href="{% url 'schoolview:leitner' %}" class="leitner-button">Do Leitner</a>
+            {% else %}
+                <p class="leitner-message">You did your Leitner for today!</p>
+            {% endif %}
+        </div>
+
+        <div class="logout-section">
+            <a href="{% url 'schoolview:logout' %}" class="logout-button">Logout</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

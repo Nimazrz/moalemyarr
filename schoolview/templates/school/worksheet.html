@@ -1,41 +1,64 @@
 {% extends 'parent/base.html' %}
 {% load static %}
-{% block title %}worksheet{% endblock %}
+{% block title %}کارنامه آزمون{% endblock %}
 {% block content %}
+<div class="worksheet-container">
+    <h1 class="worksheet-title">کارنامه آزمون</h1>
 
-    <h3>پاسخ های درست </h3>
-    {% for key, value in correct_answered.items %}
-
-        <div style="color: green;">{{ key }} : {{ value }}</div>
-
-        
-        <br>
+    <!-- بخش پاسخ‌های درست -->
+    <div class="answers-section correct-answers">
+        <h3 class="section-title">✅ پاسخ‌های درست</h3>
+        {% for key, value in correct_answered.items %}
+            <div class="answer-item">
+                <span class="question-number">{{ key }}.</span>
+                <span class="question-text">{{ value }}</span>
+            </div>
         {% empty %}
-        <h6>به هیچکدام از سوال ها پاسخ صحیح نداده اید</h6>
-    {% endfor %}
+            <p class="no-answers">شما به هیچ‌کدام از سوال‌ها پاسخ صحیح نداده‌اید.</p>
+        {% endfor %}
+    </div>
 
-
-    <h3>پاسخ های غلط</h3>
-    {% for key, value in wrong_answered.items %}
-
-        <div style="color: red;">{{ key }} : {{ value }}</div>
-        <br>
+    <!-- بخش پاسخ‌های غلط -->
+    <div class="answers-section wrong-answers">
+        <h3 class="section-title">❌ پاسخ‌های غلط</h3>
+        {% for key, value in wrong_answered.items %}
+            <div class="answer-item">
+                <span class="question-number">{{ key }}.</span>
+                <span class="question-text">{{ value.user_answer }}</span>
+                <span class="correct-answer-text">(پاسخ صحیح: {{ value.correct_answer }})</span>
+            </div>
         {% empty %}
-        <h6>به هیچکدام از سوال ها پاسخ غلط نداده اید</h6>
+            <p class="no-answers">شما به هیچ‌کدام از سوال‌ها پاسخ غلط نداده‌اید.</p>
+        {% endfor %}
+    </div>
 
-    {% endfor %}
+    <!-- خلاصه آزمون -->
+    <div class="exam-summary">
+        <h3 class="section-title">📊 خلاصه آزمون</h3>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <span class="summary-label">زمان آزمون:</span>
+                <span class="summary-value">{{ exam_data.total_time }} ثانیه</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">تعداد سوالات درست:</span>
+                <span class="summary-value">{{ correct_answered_count }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">تعداد سوالات غلط:</span>
+                <span class="summary-value">{{ wrong_answered_count }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">درصد آزمون:</span>
+                <span class="summary-value">%{{ darsad }}</span>
+            </div>
+        </div>
+    </div>
 
-    <div>
-        <div> زمان امتحان:{{ exam_data.total_time }}ثانیه</div>
-        <div>تعداد سوالات درست: {{ correct_answered_count }}</div>
-        <div>تعداد سوالات غلط: {{ wrong_answered_count }}</div>
-        <div>درصد این ازمون: %{{ darsad }}</div>
-    </div>  
-    
-    <form action="{% url 'schoolview:save_worksheet' %}" method="post">
+    <!-- دکمه ذخیره کارنامه -->
+    <form action="{% url 'schoolview:save_worksheet' %}" method="post" class="save-form">
         {% csrf_token %}
-        <button type="submit">ذخیره کارنامه</button>
+        <button type="submit" class="save-button"> ذخیره کارنامه</button>
     </form>
-
-
+</div>
 {% endblock %}
