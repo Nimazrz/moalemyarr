@@ -361,3 +361,14 @@ body, html {
 .save-button:hover {
     background-color: #218838;
 }
+
+.wrong-answers-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.wrong-answers-column, .correct-answers-column {
+    display: flex;
+    flex-direction: column;
+}

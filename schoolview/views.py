@@ -209,34 +209,39 @@ class LeitnerView(View):
     def upgrade_subquestions(self, student):
         leitner = Leitner.objects.filter(student=student).first()
         leitner_questions = []
-        leitner_question = None
+        # leitner_question = None
 
         if leitner.last_step == 1:
             leitner_questions = Leitner_question.objects.filter(n__range=(15, 29))
         elif leitner.last_step == 2:
-            leitner_questions = Leitner_question.objects.filter(n__range=(7, 14))
+            leitner_questions = Leitner_question.objects.filter(n__range=(7, 13))
         elif leitner.last_step == 3:
-            leitner_questions = Leitner_question.objects.filter(n__range=(3, 6))
+            leitner_questions = Leitner_question.objects.filter(n__range=(3, 5))
         elif leitner.last_step == 4:
-            leitner_question = Leitner_question.objects.filter(n=1).first()
+            leitner_questions = Leitner_question.objects.filter(n=1)
         elif leitner.last_step == 5:
-            leitner_question = Leitner_question.objects.filter(n=-1).first()
+            print(5)
+            leitner_questions = Leitner_question.objects.filter(n=-1)
 
         if leitner_questions:
             try:
                 for question in leitner_questions:
+                    print(question.n)
                     question.n += 1
                     question.save()
+
             except AttributeError:
                 pass
 
-        elif leitner_question:
-            try:
-                leitner_question = leitner_question.first()
-                leitner_question.n += 1
-                leitner_question.save()
-            except AttributeError:
-                pass
+        # elif leitner_question:
+        # print('heloooo'*10)
+        # # print(leitner_question.n)
+        # try:
+        #     # leitner_question = leitner_question.first()
+        #     leitner_question.n += 1
+        #     leitner_question.save()
+        # except AttributeError:
+        #     pass
 
     def get(self, request):
 
@@ -323,7 +328,7 @@ class LeitnerView(View):
                     leitner.datel = date.today()
                     leitner.save()
 
-                    self.upgrade_subquestions(student)
+
                 else:
                     # practice
                     practice.zero += 1
@@ -332,7 +337,7 @@ class LeitnerView(View):
                     practice.save()
 
                     # leitner_question
-                    leitner_question.n = 0
+                    leitner_question.n = -1
                     leitner_question.datelq = date.today()
                     leitner_question.save()
 
@@ -340,7 +345,7 @@ class LeitnerView(View):
                     leitner.datel = date.today()
                     leitner.save()
 
-                    self.upgrade_subquestions(student)
+        self.upgrade_subquestions(student)
 
         return redirect('schoolview:leitner')
 
@@ -348,16 +353,15 @@ class LeitnerView(View):
 def profile(request, user_id):
     student = Student.objects.get(student=user_id)
     leitner = Leitner.objects.filter(student=student).first()
-    leitner_question=Leitner_question.objects.filter(student=student)
-    question_practice_worksheet=Question_practice_worksheet.objects.filter(student=student)
+    leitner_question = Leitner_question.objects.filter(student=student)
+    question_practice_worksheet = Question_practice_worksheet.objects.filter(student=student)
     current_date = date.today()
 
     context = {
-        'student' : student,
-        'leitner' : leitner,
-        'leitner_question' : leitner_question,
-        'question_practice_worksheet' : question_practice_worksheet,
-        'current_date' : current_date,
+        'student': student,
+        'leitner': leitner,
+        'leitner_question': leitner_question,
+        'question_practice_worksheet': question_practice_worksheet,
+        'current_date': current_date,
     }
     return render(request, 'school/profile.html', context)
-
