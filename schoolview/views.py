@@ -14,7 +14,7 @@ from django.views import View
 
 def register(request):
     if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
+        form = UserRegisterForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
@@ -356,6 +356,8 @@ def profile(request, user_id):
     leitner_question = Leitner_question.objects.filter(student=student)
     question_practice_worksheet = Question_practice_worksheet.objects.filter(student=student)
     current_date = date.today()
+    worksheets = Question_practice_worksheet.objects.filter(student=student)
+
 
     context = {
         'student': student,
@@ -363,6 +365,7 @@ def profile(request, user_id):
         'leitner_question': leitner_question,
         'question_practice_worksheet': question_practice_worksheet,
         'current_date': current_date,
+        'worksheets': worksheets,
     }
     return render(request, 'school/profile.html', context)
 
@@ -370,7 +373,7 @@ def profile(request, user_id):
 @login_required
 def edit_profile(request):
     if request.method == 'POST':
-        user_form = EditProfileForm(request.POST, instance=request.user)
+        user_form = EditProfileForm(request.POST, request.FILES, instance=request.user)
         if user_form.is_valid():
             user_form.save()
     else:

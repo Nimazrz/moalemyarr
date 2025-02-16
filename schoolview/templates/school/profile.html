@@ -4,18 +4,47 @@
 {% block content %}
 <div class="profile-container">
     <div class="profile-header">
-        <img src="{{ student.student.profile.url }}" alt="photo" class="rounded-image">
+        {% if student.student.profile %}
+            <img src="{{ student.student.profile.url }}" alt="photo" class="rounded-image">
+        {% endif %}
         <h1>Hello {{ user.username }}</h1>
     </div>
 
     <div class="leitner-section">
         {% if leitner.datel != current_date %}
-            <a href="{% url 'schoolview:leitner' %}" class="leitner-button">Do Leitner</a>
+                <div class="exam-section">
+                    <a href="{% url 'schoolview:leitner' %}" class="leitner-button">Do Leitner</a>
+
+                 </div>
         {% else %}
             <p class="leitner-message">You did your Leitner for today!</p>
         {% endif %}
     </div>
 
+    <div class="exam-section">
+        <a href="{% url 'schoolview:exam' %}" class="exam-button">exam</a>
+
+    </div>
+
+    <h3>تمرین های روز</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>تاریخ</th>
+                <th>زمان کل</th>
+                <th>زمان سپری شده</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for worksheet in worksheets %}
+                <tr>
+                    <td>{{ worksheet.date }}</td>
+                    <td>{{ worksheet.total_time }}</td>
+                    <td> {{ worksheet.time_spent }} </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
 
     <div class="logout-section">

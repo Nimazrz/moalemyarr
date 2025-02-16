@@ -1,11 +1,17 @@
 <header class="site-header">
-    <div class="header-container">
+ <div class="header-container">
         <div class="logo">
             <a href="/">Moalemyar</a> <!-- لینک به صفحه اصلی -->
         </div>
         <nav class="user-menu">
             {% if request.user.is_authenticated %}
-                <a href="{% url 'schoolview:profile' user.id %}" class="profile-link">{{ request.user.username }}</a>
+                <div class="dropdown">
+                    <a href="{% url 'schoolview:profile' user.id %}" class="profile-link username">{{ request.user.username }}</a>
+                    <div class="dropdown-content">
+                        <a href="{% url 'schoolview:profile' user.id %}">پروفایل</a>
+                        <a href="{% url 'schoolview:logout' %}">خروج</a>
+                    </div>
+                </div>
             {% else %}
                 <a href="{% url 'schoolview:login' %}" class="login-link">Login</a>
             {% endif %}
