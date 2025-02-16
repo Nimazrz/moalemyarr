@@ -15,5 +15,6 @@ urlpatterns = [
     path('save_worksheet/', views.save_worksheet, name='save_worksheet'),
     path('leitner/', views.LeitnerView.as_view(), name='leitner'),
     path('profile/<int:user_id>/', views.profile, name='profile'),
+    path('profile/edit/', views.edit_profile, name='edit_profile'),
 
 ]

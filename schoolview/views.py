@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, reverse
 from django.http import HttpResponse
 from school.models import *
 from django.contrib.auth import logout
-from schoolview.forms import UserRegisterForm
+from schoolview.forms import UserRegisterForm, EditProfileForm
 import random
 from datetime import datetime, date, timedelta
 from django.db.models.fields.files import ImageFieldFile, FileField
@@ -365,3 +365,17 @@ def profile(request, user_id):
         'current_date': current_date,
     }
     return render(request, 'school/profile.html', context)
+
+
+@login_required
+def edit_profile(request):
+    if request.method == 'POST':
+        user_form = EditProfileForm(request.POST, instance=request.user)
+        if user_form.is_valid():
+            user_form.save()
+    else:
+        user_form = EditProfileForm(instance=request.user)
+    context = {
+        'user_form': user_form,
+    }
+    return render(request, 'registration/edit_profile.html', context)

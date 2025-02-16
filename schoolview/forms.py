@@ -15,3 +15,10 @@ class UserRegisterForm(forms.ModelForm):
         if cd['password'] != cd['password2']:
             raise forms.ValidationError('passwords doesnt match')
         return cd['password2']
+
+
+class EditProfileForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['code_meli', 'username', 'first_name', 'last_name', 'phone', 'email', 'address', 'province',
+                  'city', 'county', 'landline_phone', 'bio', 'profile', 'is_question_designer', 'is_student']

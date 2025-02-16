@@ -16,7 +16,11 @@
         {% endif %}
     </div>
 
+
+
     <div class="logout-section">
+        <a href="{% url 'schoolview:edit_profile' %}" class="logout-button">edit profile</a>
+
         <a href="{% url 'schoolview:logout' %}" class="logout-button">Logout</a>
     </div>
 </div>

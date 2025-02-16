@@ -1,0 +1,11 @@
+{% extends 'parent/base.html' %}
+{% load static %}
+{% block title %}edit Profile{% endblock %}
+{% block content %}
+
+<form method="post">
+    {% csrf_token %}
+    {{ user_form.as_p }}
+    <button type="submit">Save</button>
+</form>
+{% endblock %}
