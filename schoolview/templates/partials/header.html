@@ -6,9 +6,15 @@
         <nav class="user-menu">
             {% if request.user.is_authenticated %}
                 <div class="dropdown">
-                    <a href="{% url 'schoolview:profile' user.id %}" class="profile-link username">{{ request.user.username }}</a>
+                    <a  class="profile-link username">{{ request.user.username }}</a>
                     <div class="dropdown-content">
-                        <a href="{% url 'schoolview:profile' user.id %}">پروفایل</a>
+                        {% if user.is_student %}
+                        	<a href="{% url 'schoolview:student_profile' user.id %}"> پروفایل دانش اموز</a>
+                        {% elif user.is_question_designer %}
+                           <a href="{% url 'schoolview:designer_profile' user.id %}"> پروفایل طراح سوال</a>
+
+                        {% endif %}
+
                         <a href="{% url 'schoolview:logout' %}">خروج</a>
                     </div>
                 </div>

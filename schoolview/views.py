@@ -1,3 +1,5 @@
+from turtledemo.bytedesign import Designer
+
 from django.shortcuts import render, redirect, reverse
 from django.http import HttpResponse
 from school.models import *
@@ -10,6 +12,11 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db.models import F, ExpressionWrapper, IntegerField
 from django.views import View
+from django.shortcuts import render, redirect
+from django.views.generic import CreateView
+from django.urls import reverse_lazy
+from school.models import Subquestion, Right_answer, Wrong_answer
+from .forms import SubquestionForm, RightAnswerFormSet, WrongAnswerFormSet
 
 
 def register(request):
@@ -350,14 +357,13 @@ class LeitnerView(View):
         return redirect('schoolview:leitner')
 
 
-def profile(request, user_id):
+def student_profile(request, user_id):
     student = Student.objects.get(student=user_id)
     leitner = Leitner.objects.filter(student=student).first()
     leitner_question = Leitner_question.objects.filter(student=student)
     question_practice_worksheet = Question_practice_worksheet.objects.filter(student=student)
     current_date = date.today()
     worksheets = Question_practice_worksheet.objects.filter(student=student)
-
 
     context = {
         'student': student,
@@ -367,8 +373,14 @@ def profile(request, user_id):
         'current_date': current_date,
         'worksheets': worksheets,
     }
-    return render(request, 'school/profile.html', context)
+    return render(request, 'school/student_profile.html', context)
 
+def designer_profile(request, user_id):
+    designer = Question_designer.objects.get(designer=user_id)
+    context = {
+        'designer': designer,
+    }
+    return render(request, 'school/designer_profile.html', context)
 
 @login_required
 def edit_profile(request):
@@ -382,3 +394,60 @@ def edit_profile(request):
         'user_form': user_form,
     }
     return render(request, 'registration/edit_profile.html', context)
+
+
+@login_required
+def questions(request, user_id):
+    student = Student.objects.get(student=user_id)
+    questions = Practice.objects.filter(student=student)
+    return render(request, "school/questions.html", {'questions': questions})
+
+
+
+class SubquestionCreateView(CreateView):
+    model = Subquestion
+    form_class = SubquestionForm
+    template_name = 'forms/subquestion_form.html'
+    success_url = reverse_lazy('subquestion_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if self.request.POST:
+            context['right_answer_formset'] = RightAnswerFormSet(self.request.POST, self.request.FILES,
+                                                                 queryset=Right_answer.objects.none())
+            context['wrong_answer_formset'] = WrongAnswerFormSet(self.request.POST, self.request.FILES,
+                                                                 queryset=Wrong_answer.objects.none())
+        else:
+            context['right_answer_formset'] = RightAnswerFormSet(queryset=Right_answer.objects.none())
+            context['wrong_answer_formset'] = WrongAnswerFormSet(queryset=Wrong_answer.objects.none())
+
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        right_answer_formset = context['right_answer_formset']
+        wrong_answer_formset = context['wrong_answer_formset']
+
+        # گرفتن آبجکت Question_designer مربوط به کاربر لاگین شده
+        question_designer = Question_designer.objects.get(designer=self.request.user)
+        form.instance.question_designer = question_designer
+
+        if right_answer_formset.is_valid() and wrong_answer_formset.is_valid():
+            self.object = form.save()  # ذخیره‌ی سوال
+            right_answers = right_answer_formset.save(commit=False)  # ذخیره بدون کامیت
+            wrong_answers = wrong_answer_formset.save(commit=False)
+
+            # اتصال پاسخ‌های صحیح به سوال
+            for right_answer in right_answers:
+                right_answer.subquestion = self.object  # اینجا مقدار `subquestion` را تنظیم می‌کنیم
+                right_answer.save()
+
+            # اتصال پاسخ‌های غلط به سوال
+            for wrong_answer in wrong_answers:
+                wrong_answer.subquestion = self.object
+                wrong_answer.save()
+
+            return redirect(self.get_success_url())  # هدایت به صفحه‌ی موفقیت
+        else:
+            return self.render_to_response(self.get_context_data(form=form))

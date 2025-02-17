@@ -1,0 +1,32 @@
+{% extends 'parent/base.html' %}
+{% load static %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+
+      <table>
+        <thead>
+            <tr>
+                <th>سوال</th>
+                <th>اخرین تاریخ تمرین</th>
+                <th>تعدا دفعات غلط</th>
+                <th>تعداد دفعات درست</th>
+                <th>تعداد اشتباهات متوالی </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for question in questions %}
+                <tr>
+                    <td>
+                        {% for subquestion in question.subquestion.all %}
+                            {{ subquestion.text }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>{{ question.date }}</td>
+                    <td> {{ question.nf }} </td>
+                    <td>{{ question.nt }}</td>
+                    <td>{{ question.zero }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

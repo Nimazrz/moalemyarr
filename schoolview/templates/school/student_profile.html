@@ -1,4 +1,5 @@
 {% extends 'parent/base.html' %}
+{% load teacher_tags %}
 {% load static %}
 {% block title %}Profile{% endblock %}
 {% block content %}
@@ -23,7 +24,7 @@
 
     <div class="exam-section">
         <a href="{% url 'schoolview:exam' %}" class="exam-button">exam</a>
-
+        <a href="{% url 'schoolview:questions' user.id %}" class="exam-button">سوالات</a>
     </div>
 
     <h3>تمرین های روز</h3>
@@ -53,4 +54,5 @@
         <a href="{% url 'schoolview:logout' %}" class="logout-button">Logout</a>
     </div>
 </div>
+
 {% endblock %}

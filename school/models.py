@@ -193,7 +193,6 @@ class Subquestion(models.Model):
     question_designer = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name='questions')
     score = models.PositiveIntegerField(default=0)
     time = models.PositiveIntegerField(default=0)
-    n = models.PositiveIntegerField()
 
     course = models.ManyToManyField(Course, related_name='subquestions', blank=True)
     book = models.ManyToManyField(Book, related_name='subquestions', blank=True, )
@@ -269,7 +268,7 @@ class Practice(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Practice,{self.student}"
+        return f"Practice, {', '.join([str(student) for student in self.student.all()])}"
 
     class Meta:
         db_table = 'practice'

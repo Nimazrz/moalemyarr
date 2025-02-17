@@ -3,12 +3,14 @@
 {% block title %}login{% endblock %}
 
 {% block content %}
-    <h1>ورود</h1>
-<p>اطلاعات خود را وارد کنید</p>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit">
-</form>
-    <a href="{% url 'schoolview:register' %}">register</a>
+    <div class="login-container">
+        <h1 class="login-title">ورود</h1>
+        <p class="login-info">اطلاعات خود را وارد کنید</p>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <input type="submit", value="ورود">
+        </form>
+        <a href="{% url 'schoolview:register' %}" class="register-link">ثبت‌نام</a>
+    </div>
 {% endblock %}

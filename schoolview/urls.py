@@ -14,7 +14,10 @@ urlpatterns = [
     path('worksheet/', views.make_worksheet, name='worksheet'),
     path('save_worksheet/', views.save_worksheet, name='save_worksheet'),
     path('leitner/', views.LeitnerView.as_view(), name='leitner'),
-    path('profile/<int:user_id>/', views.profile, name='profile'),
+    path('student_profile/<int:user_id>/', views.student_profile, name='student_profile'),
+    path('designer_profile/<int:user_id>/', views.designer_profile, name='designer_profile'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
-
+    path('profile/<int:user_id>/questions/', views.questions, name='questions'),
+    path('profile/subquestion_list/', views.SubquestionCreateView.as_view(),
+         name='subquestion_list'),
 ]
