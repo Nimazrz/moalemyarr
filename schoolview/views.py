@@ -1,4 +1,4 @@
-from turtledemo.bytedesign import Designer
+# from turtledemo.bytedesign import Designer
 
 from django.shortcuts import render, redirect, reverse
 from django.http import HttpResponse
@@ -12,7 +12,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db.models import F, ExpressionWrapper, IntegerField
 from django.views import View
-from django.shortcuts import render, redirect
 from django.views.generic import CreateView
 from django.urls import reverse_lazy
 from school.models import Subquestion, Right_answer, Wrong_answer

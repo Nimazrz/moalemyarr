@@ -10,10 +10,12 @@
                     <div class="dropdown-content">
                         {% if user.is_student %}
                         	<a href="{% url 'schoolview:student_profile' user.id %}"> پروفایل دانش اموز</a>
-                        {% elif user.is_question_designer %}
-                           <a href="{% url 'schoolview:designer_profile' user.id %}"> پروفایل طراح سوال</a>
-
                         {% endif %}
+                        
+                        {%if user.is_question_designer %}
+                           <a href="{% url 'schoolview:designer_profile' user.id %}"> پروفایل طراح سوال</a>
+                        {% endif %}
+                        
 
                         <a href="{% url 'schoolview:logout' %}">خروج</a>
                     </div>
