@@ -192,7 +192,7 @@ class Subquestion(models.Model):
     text = models.TextField(blank=True, null=True)
     question_designer = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name='questions')
     score = models.PositiveIntegerField(default=0)
-    time = models.PositiveIntegerField(default=0)
+    time = models.DurationField(default=0)
 
     course = models.ManyToManyField(Course, related_name='subquestions', blank=True)
     book = models.ManyToManyField(Book, related_name='subquestions', blank=True, )
@@ -314,7 +314,6 @@ class Study_report(models.Model):
 
 class Question_practice_worksheet(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='question_practice_worksheet')
-    # subquestion = models.ManyToManyField(Subquestion, related_name='question_practice_worksheet')
     total_time = models.PositiveIntegerField(default=0, blank=True, null=True)
     time_spent = models.PositiveIntegerField(default=0, blank=True, null=True)
     date = models.DateField(blank=True, null=True)
@@ -350,7 +349,7 @@ class Leitner_question(models.Model):
         return f"{self.student}"
 
     class Meta:
-        db_table = 'leitner'
+        db_table = 'leitner_question'
         ordering = ['-created_at']
         verbose_name_plural = 'لایتنر، سوال'
 
@@ -367,7 +366,7 @@ class Leitner(models.Model):
         return f"{self.student}"
 
     class Meta:
-        db_table = 'littler'
+        db_table = 'leitner'
         ordering = ['-created_at']
         verbose_name = 'لایتنر'
         verbose_name_plural = "لایتنر ها"

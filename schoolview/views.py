@@ -15,7 +15,8 @@ from django.views import View
 from django.views.generic import CreateView
 from django.urls import reverse_lazy
 from school.models import Subquestion, Right_answer, Wrong_answer
-from .forms import SubquestionForm, RightAnswerFormSet, WrongAnswerFormSet
+from .forms import SubquestionForm, RightAnswerForm, WrongAnswerForm
+from django.forms import modelformset_factory
 
 
 def register(request):
@@ -239,15 +240,6 @@ class LeitnerView(View):
             except AttributeError:
                 pass
 
-        # elif leitner_question:
-        # print('heloooo'*10)
-        # # print(leitner_question.n)
-        # try:
-        #     # leitner_question = leitner_question.first()
-        #     leitner_question.n += 1
-        #     leitner_question.save()
-        # except AttributeError:
-        #     pass
 
     def get(self, request):
 
@@ -374,12 +366,14 @@ def student_profile(request, user_id):
     }
     return render(request, 'school/student_profile.html', context)
 
+
 def designer_profile(request, user_id):
     designer = Question_designer.objects.get(designer=user_id)
     context = {
         'designer': designer,
     }
     return render(request, 'school/designer_profile.html', context)
+
 
 @login_required
 def edit_profile(request):
@@ -402,51 +396,52 @@ def questions(request, user_id):
     return render(request, "school/questions.html", {'questions': questions})
 
 
+@login_required
+def subquestion_create_view(request):
+    question_designer = Question_designer.objects.get(designer=request.user)  # دریافت طراح سوال
 
-class SubquestionCreateView(CreateView):
-    model = Subquestion
-    form_class = SubquestionForm
-    template_name = 'forms/subquestion_form.html'
-    success_url = reverse_lazy('subquestion_list')
+    # فرم‌ست‌های اصلاح‌شده با prefix
+    RightAnswerFormSet = modelformset_factory(Right_answer, form=RightAnswerForm, extra=1, can_delete=True)
+    WrongAnswerFormSet = modelformset_factory(Wrong_answer, form=WrongAnswerForm, extra=1, can_delete=True)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    if request.method == "POST":
+        form = SubquestionForm(request.POST, request.FILES)
+        right_answer_formset = RightAnswerFormSet(
+            request.POST, request.FILES, queryset=Right_answer.objects.none(), prefix="right_answer"
+        )
+        wrong_answer_formset = WrongAnswerFormSet(
+            request.POST, request.FILES, queryset=Wrong_answer.objects.none(), prefix="wrong_answer"
+        )
 
-        if self.request.POST:
-            context['right_answer_formset'] = RightAnswerFormSet(self.request.POST, self.request.FILES,
-                                                                 queryset=Right_answer.objects.none())
-            context['wrong_answer_formset'] = WrongAnswerFormSet(self.request.POST, self.request.FILES,
-                                                                 queryset=Wrong_answer.objects.none())
-        else:
-            context['right_answer_formset'] = RightAnswerFormSet(queryset=Right_answer.objects.none())
-            context['wrong_answer_formset'] = WrongAnswerFormSet(queryset=Wrong_answer.objects.none())
+        if form.is_valid() and right_answer_formset.is_valid() and wrong_answer_formset.is_valid():
+            subquestion = form.save(commit=False)
+            subquestion.question_designer = question_designer
+            subquestion.save()
 
-        return context
-
-    def form_valid(self, form):
-        context = self.get_context_data()
-        right_answer_formset = context['right_answer_formset']
-        wrong_answer_formset = context['wrong_answer_formset']
-
-        # گرفتن آبجکت Question_designer مربوط به کاربر لاگین شده
-        question_designer = Question_designer.objects.get(designer=self.request.user)
-        form.instance.question_designer = question_designer
-
-        if right_answer_formset.is_valid() and wrong_answer_formset.is_valid():
-            self.object = form.save()  # ذخیره‌ی سوال
-            right_answers = right_answer_formset.save(commit=False)  # ذخیره بدون کامیت
-            wrong_answers = wrong_answer_formset.save(commit=False)
-
-            # اتصال پاسخ‌های صحیح به سوال
+            # ذخیره جواب‌های درست
+            right_answers = right_answer_formset.save(commit=False)
             for right_answer in right_answers:
-                right_answer.subquestion = self.object  # اینجا مقدار `subquestion` را تنظیم می‌کنیم
+                right_answer.subquestion = subquestion  # تنظیم ارتباط با سوال
                 right_answer.save()
 
-            # اتصال پاسخ‌های غلط به سوال
+            # ذخیره جواب‌های غلط
+            wrong_answers = wrong_answer_formset.save(commit=False)
             for wrong_answer in wrong_answers:
-                wrong_answer.subquestion = self.object
+                wrong_answer.subquestion = subquestion  # تنظیم ارتباط با سوال
                 wrong_answer.save()
 
-            return redirect(self.get_success_url())  # هدایت به صفحه‌ی موفقیت
+            return redirect(reverse_lazy('schoolview:designer_profile'))
+
         else:
-            return self.render_to_response(self.get_context_data(form=form))
+            print("Errors in formsets:", right_answer_formset.errors, wrong_answer_formset.errors)  # Debugging
+
+    else:
+        form = SubquestionForm()
+        right_answer_formset = RightAnswerFormSet(queryset=Right_answer.objects.none(), prefix="right_answer")
+        wrong_answer_formset = WrongAnswerFormSet(queryset=Wrong_answer.objects.none(), prefix="wrong_answer")
+
+    return render(request, 'forms/subquestion_form.html', {
+        'form': form,
+        'right_answer_formset': right_answer_formset,
+        'wrong_answer_formset': wrong_answer_formset
+    })

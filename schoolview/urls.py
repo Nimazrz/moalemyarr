@@ -18,6 +18,6 @@ urlpatterns = [
     path('designer_profile/<int:user_id>/', views.designer_profile, name='designer_profile'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
     path('profile/<int:user_id>/questions/', views.questions, name='questions'),
-    path('profile/subquestion_list/', views.SubquestionCreateView.as_view(),
+    path('profile/subquestion_list/', views.subquestion_create_view,
          name='subquestion_list'),
 ]

@@ -73,6 +73,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return f' {self.get_full_name()}'
 
+    class Meta:
+        db_table = 'custom_users'
+
 
 class CommonFieldsMixin(models.Model):
     class Meta:
@@ -82,6 +85,9 @@ class CommonFieldsMixin(models.Model):
 class Admin(CommonFieldsMixin):
     admin = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='admin')
 
+    class Meta:
+        db_table = 'admin'
+
 
 class Question_designer(CommonFieldsMixin):
     designer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='designer',
@@ -89,6 +95,9 @@ class Question_designer(CommonFieldsMixin):
 
     def __str__(self):
         return f'Question_designer : {self.designer.username}(id:{self.designer.id})'
+
+    class Meta:
+        db_table = 'question_designer'
 
 
 class Student(CommonFieldsMixin):
@@ -98,3 +107,5 @@ class Student(CommonFieldsMixin):
     def __str__(self):
         return f'Student : {self.student}'
 
+    class Meta:
+        db_table = 'student'
