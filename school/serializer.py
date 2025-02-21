@@ -1,9 +1,10 @@
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from account.models import *
-from school.models import Question, Subquestion, Right_answer, Wrong_answer, Course, Book, Season, Lesson, Subject
+from school.models import *
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist
+import random
 
 
 class SignupSerializer(serializers.Serializer):
@@ -79,7 +80,7 @@ class RightanswerSerializer(serializers.ModelSerializer):
 class WronganswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wrong_answer
-        fields = ['title']
+        fields = ['id', 'title', 'image', 'audio_file', 'subject']
 
 
 class SubquestionSerializer(serializers.ModelSerializer):
@@ -88,12 +89,11 @@ class SubquestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subquestion
-        fields = ['id', 'question_designer', 'question', 'image', 'text', 'score', 'time', 'course', 'book', 'season',
-                  'lesson', 'subject', 'right_answer', 'wrong_answer']
+        fields = ['id', 'question_designer', 'question', 'exam', 'image', 'text', 'score', 'time', 'course', 'book',
+                  'season', 'lesson', 'subject', 'right_answer', 'wrong_answer']
         read_only_fields = ['question_designer']
 
     def validate(self, attrs):
-        # Ensure right_answers and wrong_answers are provided
         if 'right_answer' not in attrs or not attrs['right_answer']:
             raise serializers.ValidationError({"right_answer": "This field is required."})
         if 'wrong_answer' not in attrs or not attrs['wrong_answer']:
@@ -171,3 +171,43 @@ class SubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
         fields = "__all__"
+
+
+class ExamSubquestionSerializer(serializers.ModelSerializer):
+    answers = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Subquestion
+        fields = ['id', 'question_designer', 'question', 'image', 'text', 'score', 'time', 'answers']
+
+    def get_answers(self, obj):
+        # انتخاب یک جواب درست به صورت تصادفی
+        right_answers = list(Right_answer.objects.filter(subquestion=obj))
+        right_answer = random.choice(right_answers) if right_answers else None
+        right_answer_data = RightanswerSerializer(right_answer).data if right_answer else None
+
+        # انتخاب سه جواب غلط به صورت تصادفی
+        wrong_answers = list(Wrong_answer.objects.filter(subquestion=obj))
+        wrong_answers_selected = random.sample(wrong_answers, min(3, len(wrong_answers))) if wrong_answers else []
+        wrong_answers_data = WronganswerSerializer(wrong_answers_selected,
+                                                   many=True).data if wrong_answers_selected else []
+
+        # ترکیب جواب درست و غلط در یک لیست
+        answers_list = []
+        if right_answer_data:
+            answers_list.append(right_answer_data)
+        answers_list.extend(wrong_answers_data)
+
+        # ترکیب تصادفی جای جواب‌ها در لیست
+        random.shuffle(answers_list)
+
+        return answers_list
+
+
+class UserAnswerSerializer(serializers.Serializer):
+    subquestion_id = serializers.IntegerField()
+    right_answer_id = serializers.IntegerField()
+
+
+
+
