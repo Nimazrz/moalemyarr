@@ -207,7 +207,3 @@ class ExamSubquestionSerializer(serializers.ModelSerializer):
 class UserAnswerSerializer(serializers.Serializer):
     subquestion_id = serializers.IntegerField()
     right_answer_id = serializers.IntegerField()
-
-
-
-

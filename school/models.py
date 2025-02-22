@@ -4,8 +4,7 @@ from account.models import Question_designer, CustomUser, Student
 from datetime import timedelta
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
-
-
+from datetime import date
 # Create your models here.
 
 def right_answer_upload_path(instance, filename):
@@ -261,7 +260,7 @@ class Practice(models.Model):
     zero = models.PositiveIntegerField(default=0)
     nf = models.PositiveIntegerField(default=0)
     nt = models.PositiveIntegerField(default=0)
-    date = models.DateField()
+    date = models.DateField(default=date.today())
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

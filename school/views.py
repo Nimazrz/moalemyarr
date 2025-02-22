@@ -111,22 +111,115 @@ class SubjectViewSet(viewsets.ModelViewSet):
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def get_exam(request: Request):
+    student = Student.objects.filter(student=request.user).first()
     if request.method == "GET":
+        # دریافت سوالات و محاسبه امتیاز
         subquestions = Subquestion.objects.annotate(
             total_calculation=ExpressionWrapper(
                 (((F('practice__zero') * 2) - 1) * (F('practice__nf') + 1) / (F('practice__nt') + 1)),
                 output_field=IntegerField())
         ).order_by('-total_calculation')
 
+        # سریال‌سازی سوالات
         subquestions_serializer = ExamSubquestionSerializer(subquestions, many=True)
-        request.session['subquestions_serializer'] = subquestions_serializer.data
-        return Response(subquestions_serializer.data, status=status.HTTP_200_OK)
+        subquestions_data = subquestions_serializer.data
+
+        # استخراج جواب‌های درست از داده‌های سریال‌سازی‌شده
+        # correct_answers = [
+        #     {
+        #         'subquestion_id': subquestion['id'],
+        #         'correct_answer_id': next(
+        #             (answer['id'] for answer in subquestion['answers'] if answer.get('type') is not None),
+        #             None
+        #         )
+        #     }
+        #     for subquestion in subquestions_data
+        # ]
+        # استخراج جواب‌های درست از دیتابیس
+        right_answers = [
+            {
+                'subquestion_id': subquestion.id,
+                'right_answer_id': correct_answer.id
+            }
+            for subquestion in subquestions
+            for correct_answer in Right_answer.objects.filter(subquestion_id=subquestion.id, type__isnull=False)
+        ]
+
+        # ذخیره‌سازی داده‌ها در session
+        request.session['subquestions_serializer'] = subquestions_data
+        request.session['right_answers'] = right_answers
+
+        return Response(subquestions_data, status=status.HTTP_200_OK)
 
     elif request.method == "POST":
+        # دریافت جواب‌های کاربر و جواب‌های درست از session
+        user_answers = request.data.get('answers', {})
+        right_answers = request.session.get('right_answers', [])
 
-        user_answers = {key: request.data.get(key) for key in request.session.get('correct_answers', {})}
-        request.session['user_answers'] = user_answers
-        return Response({"message": "Answers submitted successfully"}, status=status.HTTP_200_OK)
+        # تبدیل right_answers به دیکشنری برای دسترسی سریع‌تر
+        right_answers_dict = {}
+        for answer in right_answers:
+            subquestion_id = answer['subquestion_id']
+            if subquestion_id not in right_answers_dict:
+                right_answers_dict[subquestion_id] = []
+            right_answers_dict[subquestion_id].append(answer['right_answer_id'])
+
+        # بررسی جواب‌های کاربر
+        results = []
+        for subquestion_id, user_answer_id in user_answers.items():
+            subquestion_id = int(subquestion_id)
+            user_answer_id = int(user_answer_id)
+
+            # دریافت جواب‌های درست برای سوال فعلی
+            correct_answers_for_question = right_answers_dict.get(subquestion_id, [])
+            is_correct = user_answer_id in correct_answers_for_question
+
+            # ذخیره‌سازی نتیجه
+            results.append({
+                'subquestion_id': subquestion_id,
+                'user_answer_id': user_answer_id,
+                'correct_answer_id': correct_answers_for_question[0] if correct_answers_for_question else None,
+                'is_correct': is_correct
+            })
+
+            practice = Practice.objects.filter(subquestion__id=subquestion_id).first()
+            if not practice:
+                if student:
+                    subquestion = Subquestion.objects.get(id=subquestion_id)
+                    practice = Practice.objects.create(
+                        zero=0,
+                        nf=0,
+                        nt=0,
+                        date=date.today()
+                    )
+                    practice.student.add(student)
+                    practice.subquestion.add(subquestion)
+
+            if is_correct:
+                practice.nt += 1
+                practice.zero = 0
+                practice.date = date.today()
+                practice.save()
+                print(f"سوال {subquestion_id}: جواب کاربر درست است. انجام عملیات مربوطه...")
+            else:
+                practice.nf += 1
+                practice.zero += 1
+                practice.date = date.today()
+                practice.save()
+                print(f"سوال {subquestion_id}: جواب کاربر غلط است. انجام عملیات مربوطه...")
+
+            # worksheet = Question_practice_worksheet.objects.get_or_create(
+            #     student=student, date=date.today(), defaults={"total_time": 0, "time_spent": 0}
+            # )
+            #
+            # worksheet.time_spent += 20
+            # worksheet.save()
+
+        return Response({"results": results}, status=status.HTTP_200_OK)
+
+
+
+
 
 
 @api_view(['POST'])
