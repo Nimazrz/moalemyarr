@@ -319,10 +319,10 @@ class Question_practice_worksheet(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    @classmethod
-    def exam_time(cls):
-        result = cls.objects.aggregate(total_time=sum('time_for_each_subquestion'))
-        return result['total_time'] or timedelta()
+    @property
+    def exam_time(self):
+        total_seconds = self.total_time
+        return timedelta(seconds=total_seconds)
 
     def __str__(self):
         return f"{self.student}"

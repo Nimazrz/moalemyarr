@@ -124,17 +124,6 @@ def get_exam(request: Request):
         subquestions_serializer = ExamSubquestionSerializer(subquestions, many=True)
         subquestions_data = subquestions_serializer.data
 
-        # استخراج جواب‌های درست از داده‌های سریال‌سازی‌شده
-        # correct_answers = [
-        #     {
-        #         'subquestion_id': subquestion['id'],
-        #         'correct_answer_id': next(
-        #             (answer['id'] for answer in subquestion['answers'] if answer.get('type') is not None),
-        #             None
-        #         )
-        #     }
-        #     for subquestion in subquestions_data
-        # ]
         # استخراج جواب‌های درست از دیتابیس
         right_answers = [
             {
@@ -148,6 +137,7 @@ def get_exam(request: Request):
         # ذخیره‌سازی داده‌ها در session
         request.session['subquestions_serializer'] = subquestions_data
         request.session['right_answers'] = right_answers
+        print(subquestions_data)
 
         return Response(subquestions_data, status=status.HTTP_200_OK)
 
@@ -155,6 +145,7 @@ def get_exam(request: Request):
         # دریافت جواب‌های کاربر و جواب‌های درست از session
         user_answers = request.data.get('answers', {})
         right_answers = request.session.get('right_answers', [])
+        subquestions_serializer = request.session.get('subquestions_serializer', {})
 
         # تبدیل right_answers به دیکشنری برای دسترسی سریع‌تر
         right_answers_dict = {}
@@ -166,6 +157,7 @@ def get_exam(request: Request):
 
         # بررسی جواب‌های کاربر
         results = []
+        total_time_seconds = 0
         for subquestion_id, user_answer_id in user_answers.items():
             subquestion_id = int(subquestion_id)
             user_answer_id = int(user_answer_id)
@@ -200,20 +192,24 @@ def get_exam(request: Request):
                 practice.zero = 0
                 practice.date = date.today()
                 practice.save()
-                print(f"سوال {subquestion_id}: جواب کاربر درست است. انجام عملیات مربوطه...")
             else:
                 practice.nf += 1
                 practice.zero += 1
                 practice.date = date.today()
                 practice.save()
-                print(f"سوال {subquestion_id}: جواب کاربر غلط است. انجام عملیات مربوطه...")
 
-            # worksheet = Question_practice_worksheet.objects.get_or_create(
-            #     student=student, date=date.today(), defaults={"total_time": 0, "time_spent": 0}
-            # )
-            #
-            # worksheet.time_spent += 20
-            # worksheet.save()
+            for subquestion in subquestions_serializer:
+                if subquestion['id'] == subquestion_id:
+                    time_str = subquestion['time']
+                    hours, minutes, seconds = map(int, time_str.split(':'))
+                    total_time_seconds += hours * 3600 + minutes * 60 + seconds
+                    break
+
+        worksheet, created = Question_practice_worksheet.objects.get_or_create(
+            student=student, date=date.today(),)
+        worksheet.time_spent += 20
+        worksheet.total_time += total_time_seconds
+        worksheet.save()
 
         return Response({"results": results}, status=status.HTTP_200_OK)
 
