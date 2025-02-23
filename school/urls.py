@@ -19,7 +19,7 @@ urlpatterns = [
     path("logout/", views.LogoutAPIView.as_view(), name="logout"),
 
     path('exam/', views.get_exam, name='get_exam'),
-    path('worksheet/save/', views.save_worksheet, name='api_save_worksheet'),
+    path('leitner/', views.LeitnerAPIView.as_view(), name='leitner'),
 
     path('', include(router.urls)),
 

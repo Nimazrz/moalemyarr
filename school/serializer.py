@@ -89,7 +89,7 @@ class SubquestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subquestion
-        fields = ['id', 'question_designer', 'question', 'exam', 'image', 'text', 'score', 'time', 'course', 'book',
+        fields = ['id', 'question_designer', 'question', 'image', 'text', 'score', 'time', 'course', 'book',
                   'season', 'lesson', 'subject', 'right_answer', 'wrong_answer']
         read_only_fields = ['question_designer']
 
@@ -204,6 +204,13 @@ class ExamSubquestionSerializer(serializers.ModelSerializer):
         return answers_list
 
 
-class UserAnswerSerializer(serializers.Serializer):
-    subquestion_id = serializers.IntegerField()
-    right_answer_id = serializers.IntegerField()
+class LeitnerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Leitner
+        fields = ["student", "last_step", "datel"]
+
+
+class PracticeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Practice
+        fields = ["student", "subquestion", "zero", "nf", "nt", "date"]
