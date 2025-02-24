@@ -55,7 +55,7 @@ class LogoutAPIView(APIView):
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionsSerializer
-    # authentication_classes = (BasicAuthentication, IsAuthenticated)
+    authentication_classes = (BasicAuthentication, IsAuthenticated)
 
 
 class SubquestionViewSet(viewsets.ModelViewSet):
@@ -232,8 +232,6 @@ class LeitnerAPIView(APIView):
             except AttributeError:
                 pass
 
-
-
     def get(self, request):
         student = get_object_or_404(Student, student=request.user)
         leitner, created = Leitner.objects.get_or_create(student=student)
@@ -253,7 +251,6 @@ class LeitnerAPIView(APIView):
         subquestions = Subquestion.objects.filter(leitner_question__n=numbers[(leitner.last_step) - 1])
         subquestions_serializer = ExamSubquestionSerializer(subquestions, many=True)
         subquestions_data = subquestions_serializer.data
-
 
         right_answers = [
             {
@@ -359,3 +356,23 @@ class LeitnerAPIView(APIView):
         self.upgrade_subquestions(student)
 
         return Response({'results': results}, status=status.HTTP_200_OK)
+
+
+class LeitnerQuestionViewSet(viewsets.ModelViewSet):
+    queryset = Leitner_question.objects.all()
+    serializer_class = LeitnerQuestionSerializer
+    authentication_classes = (BasicAuthentication,)
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        student = get_object_or_404(Student, student=self.request.user)
+        return Leitner_question.objects.filter(student=student)
+
+    def create(self, request, *args, **kwargs):
+        customuser = get_object_or_404(CustomUser, id=self.request.user.id)
+        student = get_object_or_404(Student, student=customuser)
+        subquestion_id = request.data['subquestion']
+        if Leitner_question.objects.filter(student=student, subquestion_id=subquestion_id).exists():
+            return Response({"message": "Subquestion already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        Leitner_question.objects.create(student=student, subquestion_id=subquestion_id)
+        return Response({"message": "Leitner question created" }, status=status.HTTP_201_CREATED)

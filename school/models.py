@@ -190,7 +190,7 @@ class Subquestion(models.Model):
     text = models.TextField(blank=True, null=True)
     question_designer = models.ForeignKey(Question_designer, on_delete=models.CASCADE, related_name='questions')
     score = models.PositiveIntegerField(default=0)
-    time = models.DurationField(default=0)
+    time = models.PositiveIntegerField(default=0)
 
     course = models.ManyToManyField(Course, related_name='subquestions', blank=True)
     book = models.ManyToManyField(Book, related_name='subquestions', blank=True, )
@@ -260,7 +260,7 @@ class Practice(models.Model):
     zero = models.PositiveIntegerField(default=0)
     nf = models.PositiveIntegerField(default=0)
     nt = models.PositiveIntegerField(default=0)
-    date = models.DateField(default=date.today())
+    date = models.DateField(default=timezone.now)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -337,7 +337,7 @@ class Question_practice_worksheet(models.Model):
 class Leitner_question(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='leitner_question')
     subquestion = models.ForeignKey(Subquestion, on_delete=models.CASCADE, related_name='leitner_question')
-    n = models.IntegerField(validators=[MinValueValidator(-1), MaxValueValidator(31)])
+    n = models.IntegerField(validators=[MinValueValidator(-1), MaxValueValidator(31)], default=0)
     datelq = models.DateField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)

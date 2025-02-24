@@ -214,3 +214,10 @@ class PracticeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Practice
         fields = ["student", "subquestion", "zero", "nf", "nt", "date"]
+
+
+class LeitnerQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Leitner_question
+        fields = ["student", "subquestion", "n", "datelq"]
+        read_only_fields = ["student", "n", "datelq"]

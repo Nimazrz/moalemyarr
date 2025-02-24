@@ -10,6 +10,7 @@ router.register(r'books', views.BookViewSet)
 router.register(r'seasons', views.SeasonViewSet)
 router.register(r'lessons', views.LessonViewSet)
 router.register(r'subjects', views.SubjectViewSet)
+router.register(r'leitnerquestion', views.LeitnerQuestionViewSet)
 
 
 app_name = "school"
