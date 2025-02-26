@@ -8,8 +8,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthentic
 from rest_framework.authentication import BasicAuthentication
 from .serializer import *
 from rest_framework.exceptions import PermissionDenied
-from datetime import date
-import random
+from .permissions import *
 from django.shortcuts import get_object_or_404
 from .models import *
 from rest_framework.decorators import api_view, permission_classes
@@ -56,31 +55,19 @@ class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionsSerializer
     authentication_classes = (BasicAuthentication, IsAuthenticated)
+    permissions_classes = (IsQuestionDesigner,)
 
 
 class SubquestionViewSet(viewsets.ModelViewSet):
     queryset = Subquestion.objects.all()
     serializer_class = SubquestionSerializer
     authentication_classes = (BasicAuthentication,)
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsQuestionDesigner]
 
     def get_queryset(self):
-        user = self.request.user
-        if user.is_superuser:
-            return Subquestion.objects.all()
-        elif hasattr(user, "is_question_designer") and user.is_question_designer:
-            return Subquestion.objects.filter(question_designer__id=user.id)
-        elif user.is_student:
-            raise PermissionDenied("You are not allowed to view or submit questions.")
-
-    def perform_create(self, serializer):
-        user = self.request.user
-        try:
-            question_designer = Question_designer.objects.get(designer=user)
-        except ObjectDoesNotExist:
-            raise ValidationError("You are not a valid question designer.")
-
-        serializer.save(question_designer=question_designer)
+        custom_user = self.request.user
+        question_designer = Question_designer.objects.filter(designer=custom_user).first()
+        return Subquestion.objects.filter(question_designer=question_designer)
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -369,10 +356,12 @@ class LeitnerQuestionViewSet(viewsets.ModelViewSet):
         return Leitner_question.objects.filter(student=student)
 
     def create(self, request, *args, **kwargs):
-        customuser = get_object_or_404(CustomUser, id=self.request.user.id)
-        student = get_object_or_404(Student, student=customuser)
+        custom_user = get_object_or_404(CustomUser, id=self.request.user.id)
+        if not custom_user.is_student:
+            return Response({"message": "You are not allowed to create questions"},)
+        student = get_object_or_404(Student, student=custom_user)
         subquestion_id = request.data['subquestion']
         if Leitner_question.objects.filter(student=student, subquestion_id=subquestion_id).exists():
             return Response({"message": "Subquestion already exists"}, status=status.HTTP_400_BAD_REQUEST)
         Leitner_question.objects.create(student=student, subquestion_id=subquestion_id)
-        return Response({"message": "Leitner question created" }, status=status.HTTP_201_CREATED)
+        return Response({"message": "Leitner question created"}, status=status.HTTP_201_CREATED)
