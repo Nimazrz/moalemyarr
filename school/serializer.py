@@ -47,7 +47,7 @@ class LoginSerializer(serializers.Serializer):
         code_meli = data.get("code_meli")
         password = data.get("password")
 
-        if not code_meli or not password:
+        if not (code_meli or password):
             raise serializers.ValidationError("Both code_meli and password are required.")
 
         user = authenticate(code_meli=code_meli, password=password)

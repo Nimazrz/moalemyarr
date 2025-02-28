@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.authentication import BasicAuthentication
 from .serializer import *
 from rest_framework.exceptions import PermissionDenied
@@ -13,9 +13,18 @@ from django.shortcuts import get_object_or_404
 from .models import *
 from rest_framework.decorators import api_view, permission_classes
 from django.db.models import F, ExpressionWrapper, IntegerField
-
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.middleware.csrf import get_token
+import json
 
 # Create your views here.
+
+def csrf_token_view(request):
+    return JsonResponse({"csrfToken": get_token(request)})
+
 
 class SignupAPIView(APIView):
     def post(self, request, *args, **kwargs):
@@ -27,14 +36,12 @@ class SignupAPIView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoginAPIView(APIView):
-    def post(self, request, *args, **kwargs):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data['user']
-            login(request, user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        return Response({"message": "Login successfully"}, status=status.HTTP_200_OK)
+
 
 
 class LogoutAPIView(APIView):
@@ -49,6 +56,18 @@ class LogoutAPIView(APIView):
             logout(request)
             return Response({"message": "you have logged out succesfully"}, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class CheckAuthView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return JsonResponse({"user": {"username": request.user.username}})
+
+
+class CSRFTokenView(APIView):
+    def get(self, request):
+        return JsonResponse({"csrfToken": get_token(request)})
 
 
 class QuestionViewSet(viewsets.ModelViewSet):

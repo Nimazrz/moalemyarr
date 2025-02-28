@@ -43,10 +43,12 @@ INSTALLED_APPS = [
     'rest_framework.authentication',
     'rest_framework.authtoken',
     "account.apps.AccountConfig",
+    'corsheaders',
 
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -55,6 +57,21 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True  # برای ارسال کوکی سشن ضروری است
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # آدرس فرانت‌اند
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+]
+
+SESSION_COOKIE_SAMESITE = None
+SESSION_COOKIE_SECURE = False  # برای لوکال باید False باشه
+CSRF_COOKIE_SAMESITE = None
+CSRF_COOKIE_SECURE = False
 
 ROOT_URLCONF = 'moalemyarapi.urls'
 
@@ -151,9 +168,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'account.CustomUser'
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
+    ],
     'DEFAULT_PAGINATION_CLASS':
     'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 8,
@@ -161,6 +181,6 @@ REST_FRAMEWORK = {
 
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_AGE = 86400  # 1 روز
-SESSION_SAVE_EVERY_REQUEST = True  # هر درخواست، سشن را ذخیره کند
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+# SESSION_COOKIE_AGE = 86400  # 1 روز
+# SESSION_SAVE_EVERY_REQUEST = True  # هر درخواست، سشن را ذخیره کند
+# SESSION_EXPIRE_AT_BROWSER_CLOSE = False

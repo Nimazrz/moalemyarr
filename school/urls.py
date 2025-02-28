@@ -16,8 +16,10 @@ router.register(r'leitnerquestion', views.LeitnerQuestionViewSet)
 app_name = "school"
 urlpatterns = [
     path("signup/", views.SignupAPIView.as_view(), name="signup"),
-    path("login/", views.LoginAPIView.as_view(), name="login"),
+    path("login/", views.LoginView.as_view(), name="login"),
     path("logout/", views.LogoutAPIView.as_view(), name="logout"),
+    path("check-auth/", views.CheckAuthView.as_view(), name="check-auth"),
+    path("csrf-token/", views.CSRFTokenView.as_view(), name="csrf-token"),
 
     path('exam/', views.get_exam, name='get_exam'),
     path('leitner/', views.LeitnerAPIView.as_view(), name='leitner'),
