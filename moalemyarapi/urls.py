@@ -23,15 +23,10 @@ from django.http import JsonResponse
 from django.middleware.csrf import get_token
 
 
-def csrf_token_view(request):
-    return JsonResponse({"csrfToken": get_token(request)})
-
-
 urlpatterns = [
 
                   path('admin/', admin.site.urls),
                   path('api-auth/', include('rest_framework.urls')),  # for using multiuser in api and change users
                   path("api/", include("school.urls", namespace="school")),
                   path('', include("schoolview.urls", namespace="schoolview")),
-                  path("api/csrf/", csrf_token_view, name="csrf_token"),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

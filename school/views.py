@@ -5,7 +5,7 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
-from rest_framework.authentication import BasicAuthentication
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from .serializer import *
 from rest_framework.exceptions import PermissionDenied
 from .permissions import *
@@ -18,6 +18,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
+from rest_framework.authtoken.models import Token
 import json
 
 # Create your views here.
@@ -37,11 +38,14 @@ class SignupAPIView(APIView):
 
 
 class LoginView(APIView):
-    permission_classes = [AllowAny]
-
     def post(self, request):
-        return Response({"message": "Login successfully"}, status=status.HTTP_200_OK)
-
+        username = request.data.get("username")
+        password = request.data.get("password")
+        print(username, password)
+        if request.user.is_authenticated:
+            return Response({"message": "Login successfully"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "Username or password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutAPIView(APIView):
@@ -215,6 +219,7 @@ def get_exam(request: Request):
 
 
 class LeitnerAPIView(APIView):
+    print("hi")
     def upgrade_subquestions(self, student):
         leitner = Leitner.objects.filter(student=student).first()
         leitner_questions = []
@@ -240,6 +245,7 @@ class LeitnerAPIView(APIView):
 
     def get(self, request):
         student = get_object_or_404(Student, student=request.user)
+        print(student)
         leitner, created = Leitner.objects.get_or_create(student=student)
 
         if leitner.last_step == 1 and leitner.datel == date.today():

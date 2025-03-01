@@ -1,6 +1,8 @@
 from django.urls import path, include
 from . import views
 from rest_framework import routers
+from rest_framework.authtoken.views import obtain_auth_token
+
 router = routers.DefaultRouter()
 
 router.register(r'questions', views.QuestionViewSet)
@@ -18,8 +20,8 @@ urlpatterns = [
     path("signup/", views.SignupAPIView.as_view(), name="signup"),
     path("login/", views.LoginView.as_view(), name="login"),
     path("logout/", views.LogoutAPIView.as_view(), name="logout"),
-    path("check-auth/", views.CheckAuthView.as_view(), name="check-auth"),
-    path("csrf-token/", views.CSRFTokenView.as_view(), name="csrf-token"),
+
+    path('api_token_auth/', obtain_auth_token, name='api_token_auth'),
 
     path('exam/', views.get_exam, name='get_exam'),
     path('leitner/', views.LeitnerAPIView.as_view(), name='leitner'),

@@ -3,7 +3,8 @@ from django.core.exceptions import ValidationError
 from django.dispatch import receiver
 from .models import Subquestion
 from account.models import CustomUser, Student, Question_designer
-
+from django.conf import settings
+from rest_framework.authtoken.models import Token
 
 @receiver(pre_save, sender=Subquestion)
 def validate_subquestion_fields(sender, instance, **kwargs):
@@ -15,3 +16,9 @@ def validate_subquestion_fields(sender, instance, **kwargs):
 def create_question_designer(sender, instance, created, **kwargs):
     if created and instance.is_question_designer:
         Question_designer.objects.create(designer=instance)
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
