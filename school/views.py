@@ -1,3 +1,4 @@
+from django.shortcuts import redirect
 from django.contrib.auth import logout, login
 from rest_framework import status
 from rest_framework.response import Response
@@ -5,7 +6,7 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
-from rest_framework.authentication import BasicAuthentication, SessionAuthentication
+from rest_framework.authentication import BasicAuthentication
 from .serializer import *
 from rest_framework.exceptions import PermissionDenied
 from .permissions import *
@@ -21,12 +22,8 @@ from django.middleware.csrf import get_token
 from rest_framework.authtoken.models import Token
 import json
 
+
 # Create your views here.
-
-def csrf_token_view(request):
-    return JsonResponse({"csrfToken": get_token(request)})
-
-
 class SignupAPIView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = SignupSerializer(data=request.data)
@@ -37,15 +34,6 @@ class SignupAPIView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoginView(APIView):
-    def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
-        print(username, password)
-        if request.user.is_authenticated:
-            return Response({"message": "Login successfully"}, status=status.HTTP_200_OK)
-        else:
-            return Response({"message": "Username or password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutAPIView(APIView):
@@ -219,7 +207,6 @@ def get_exam(request: Request):
 
 
 class LeitnerAPIView(APIView):
-    print("hi")
     def upgrade_subquestions(self, student):
         leitner = Leitner.objects.filter(student=student).first()
         leitner_questions = []
@@ -245,7 +232,6 @@ class LeitnerAPIView(APIView):
 
     def get(self, request):
         student = get_object_or_404(Student, student=request.user)
-        print(student)
         leitner, created = Leitner.objects.get_or_create(student=student)
 
         if leitner.last_step == 1 and leitner.datel == date.today():
@@ -289,17 +275,28 @@ class LeitnerAPIView(APIView):
         )
 
     def post(self, request):
+        print(":hello")
+        """
+            {
+              "answers": [
+                {"question_id": 1, "answer_id": 7},
+                {"question_id": 9, "answer_id": 9}
+              ]
+            }
+        """
         student = get_object_or_404(Student, student=request.user)
-        right_answers = request.session.get("right_answers", {})
-        user_answers = request.data.get("answers", {})
+        right_answers = request.session.get("right_answers", [])
+
+        user_answers_list = request.data.get("answers", [])
+        user_answers = {str(item["question_id"]): item["answer_id"] for item in user_answers_list}
         right_answers_dict = {}
         for answer in right_answers:
             subquestion_id = answer['subquestion_id']
             if subquestion_id not in right_answers_dict:
                 right_answers_dict[subquestion_id] = []
             right_answers_dict[subquestion_id].append(answer['right_answer_id'])
-
         results = []
+        leitner = Leitner.objects.filter(student=student).first()
         for subquestion_id, user_answer_id in user_answers.items():
             subquestion_id = int(subquestion_id)
             user_answer_id = int(user_answer_id)
@@ -314,8 +311,8 @@ class LeitnerAPIView(APIView):
                 'is_correct': is_correct
             })
 
+
             leitner_question = Leitner_question.objects.get(subquestion_id=subquestion_id)
-            leitner = Leitner.objects.filter(student=student).first()
 
             practice = Practice.objects.filter(subquestion__id=subquestion_id).first()
             if not practice:
@@ -331,40 +328,33 @@ class LeitnerAPIView(APIView):
                     practice.subquestion.add(subquestion)
 
             if is_correct:
-                # leitner
+                print("hi")
                 leitner.last_step += 1
                 leitner.datel = date.today()
                 leitner.save()
 
-                # leitner_question
                 leitner_question.n += 1
                 leitner_question.datelq = date.today()
                 leitner_question.save()
 
-                # practice
                 practice.nt += 1
                 practice.zero = 0
                 practice.date = date.today()
                 practice.save()
-
             else:
-                # leitner
                 leitner.last_step += 1
                 leitner.datel = date.today()
                 leitner.save()
 
-                # leitner_question
                 leitner_question.n = -1
                 leitner_question.datelq = date.today()
                 leitner_question.save()
 
-                # practice
                 practice.nf += 1
                 practice.zero += 1
                 practice.date = date.today()
                 practice.save()
-                print(results)
-
+        print(results)
         self.upgrade_subquestions(student)
 
         return Response({'results': results}, status=status.HTTP_200_OK)
