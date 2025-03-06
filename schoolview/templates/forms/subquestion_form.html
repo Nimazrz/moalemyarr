@@ -2,79 +2,12 @@
 {% load static %}
 {% block title %}form{% endblock %}
 {% block content %}
+
   <h2>ایجاد سوال جدید</h2>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
-
-    <h3>جواب‌های درست</h3>
-    <div id="right-answer-formset">
-      {{ right_answer_formset.management_form }}
-      {% for form in right_answer_formset %}
-        <div class="right-answer-form">
-          {{ form.as_p }}
-          <button type="button" class="remove-form">حذف</button>
-        </div>
-      {% endfor %}
-    </div>
-    <button type="button" id="add-right-answer">افزودن جواب درست</button>
-
-    <h3>جواب‌های غلط</h3>
-    <div id="wrong-answer-formset">
-      {{ wrong_answer_formset.management_form }}
-      {% for form in wrong_answer_formset %}
-        <div class="wrong-answer-form">
-          {{ form.as_p }}
-          <button type="button" class="remove-form">حذف</button>
-        </div>
-      {% endfor %}
-    </div>
-    <button type="button" id="add-wrong-answer">افزودن جواب غلط</button>
-
     <button type="submit">ثبت سوال</button>
   </form>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      function updateFormsetIndexes(container, prefix) {
-        let forms = container.getElementsByClassName(prefix + "-form");
-        let totalForms = container.querySelector("input[name='" + prefix + "-TOTAL_FORMS']");
-        totalForms.value = forms.length;
-        for (let i = 0; i < forms.length; i++) {
-          let inputs = forms[i].querySelectorAll("input, select, textarea");
-          inputs.forEach(input => {
-            if (input.name.includes(prefix)) {
-              let newName = input.name.replace(/\d+/, i);
-              let newId = input.id.replace(/\d+/, i);
-              input.name = newName;
-              input.id = newId;
-            }
-          });
-        }
-      }
-
-      function addForm(container, templateSelector, prefix) {
-        let newForm = document.querySelector(templateSelector).cloneNode(true);
-        newForm.classList.remove("template");
-        container.appendChild(newForm);
-        updateFormsetIndexes(container, prefix);
-      }
-
-      document.getElementById("add-right-answer").addEventListener("click", function() {
-        addForm(document.getElementById("right-answer-formset"), ".right-answer-form", "right_answer");
-      });
-
-      document.getElementById("add-wrong-answer").addEventListener("click", function() {
-        addForm(document.getElementById("wrong-answer-formset"), ".wrong-answer-form", "wrong_answer");
-      });
-
-      document.addEventListener("click", function(event) {
-        if (event.target.classList.contains("remove-form")) {
-          let container = event.target.closest(".right-answer-form, .wrong-answer-form").parentNode;
-          event.target.closest(".right-answer-form, .wrong-answer-form").remove();
-          updateFormsetIndexes(container, container.id.includes("right") ? "right_answer" : "wrong_answer");
-        }
-      });
-    });
-  </script>
 {% endblock %}

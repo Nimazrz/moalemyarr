@@ -29,20 +29,64 @@ class EditProfileForm(forms.ModelForm):
 class RightAnswerForm(forms.ModelForm):
     class Meta:
         model = Right_answer
-        fields = ['subquestion', 'title', 'image', 'audio_file', 'type']
+        fields = ['title', 'image', 'audio_file', 'type']
 
 
 class WrongAnswerForm(forms.ModelForm):
     class Meta:
         model = Wrong_answer
-        fields = ['subquestion', 'title', 'image', 'audio_file', 'subject']
+        fields = ['title', 'image', 'audio_file', 'subject']
+
+
+RightAnswerFormSet = modelformset_factory(Right_answer, form=RightAnswerForm, extra=1, can_delete=True)
+WrongAnswerFormSet = modelformset_factory(Wrong_answer, form=WrongAnswerForm, extra=1, can_delete=True)
 
 
 class SubquestionForm(forms.ModelForm):
     class Meta:
         model = Subquestion
-        fields = ['text', 'image', 'score', 'time', 'course', 'book', 'season', 'lesson', 'subject']
+        fields = ['question', 'text', 'image', 'score', 'time', 'course', 'book', 'season', 'lesson', 'subject']
+
+    def is_valid(self):
+        valid = super().is_valid()
+        if not valid:
+            return valid
+        if not (self.cleaned_data.get('text') or self.cleaned_data.get('image')):
+            raise forms.ValidationError('حداقل یکی از فیلدهای متن یا ایمج را پر کنید')
+        return True
 
 
-RightAnswerFormSet = modelformset_factory(Right_answer, fields=('title', 'image', 'audio_file', 'type'), extra=1)
-WrongAnswerFormSet = modelformset_factory(Wrong_answer, fields=('title', 'image', 'audio_file', 'subject'), extra=1)
+class CourseForm(forms.ModelForm):
+    class Meta:
+        model = Course
+        fields = ['name']
+
+
+class BookForm(forms.ModelForm):
+    class Meta:
+        model = Book
+        fields = ['name']
+
+
+class SeasonForm(forms.ModelForm):
+    class Meta:
+        model = Season
+        fields = ['name']
+
+
+class LessonForm(forms.ModelForm):
+    class Meta:
+        model = Lesson
+        fields = ['name']
+
+
+class SubjectForm(forms.ModelForm):
+    class Meta:
+        model = Subject
+        fields = ['name']
+
+
+class QuestionForm(forms.ModelForm):
+    class Meta:
+        model = Question
+        fields = ['title', 'image', 'audio_file']

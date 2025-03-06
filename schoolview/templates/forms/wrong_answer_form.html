@@ -1,0 +1,29 @@
+{% extends 'parent/base.html' %}
+{% load static %}
+{% block title %}ثبت جواب‌های غلط{% endblock %}
+{% block content %}
+<h2>افزودن جواب غلط برای: {{ subquestion.title }}</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <div id="form-container">
+        {% for form in formset %}
+            <div class="form-item">{{ form.as_p }}</div>
+        {% endfor %}
+    </div>
+    <button type="button" id="add-form">افزودن جواب جدید</button>
+    <button type="submit">ثبت نهایی</button>
+</form>
+
+<script>
+document.getElementById("add-form").addEventListener("click", function() {
+    var formContainer = document.getElementById("form-container");
+    var totalForms = document.getElementById("id_form-TOTAL_FORMS");
+    var formNum = totalForms.value;
+    var newForm = formContainer.children[0].cloneNode(true);
+    newForm.innerHTML = newForm.innerHTML.replace(/form-\d+/g, "form-" + formNum);
+    formContainer.appendChild(newForm);
+    totalForms.value = parseInt(formNum) + 1;
+});
+</script>
+{% endblock %}

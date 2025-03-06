@@ -1,0 +1,28 @@
+{% extends 'parent/base.html' %}
+{% load static %}
+{% block title %}ثبت  موضوع{% endblock %}
+{% block content %}
+<h2>ایجاد دوره، کتاب، فصل، درس و موضوع جدید</h2>
+
+<form method="POST">
+    {% csrf_token %}
+
+    <label for="id_course_name">دوره:</label>
+    <input type="text" name="course_name" id="id_course_name">
+
+    <label for="id_book_name">کتاب:</label>
+    <input type="text" name="book_name" id="id_book_name">
+
+    <label for="id_season_name">فصل:</label>
+    <input type="text" name="season_name" id="id_season_name">
+
+    <label for="id_lesson_name">درس:</label>
+    <input type="text" name="lesson_name" id="id_lesson_name">
+
+    <label for="id_subject_name">موضوع:</label>
+    <input type="text" name="subject_name" id="id_subject_name">
+
+    <button type="submit">ثبت</button>
+</form>
+
+{% endblock %}

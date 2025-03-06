@@ -1,6 +1,7 @@
-# from turtledemo.bytedesign import Designer
+from turtledemo.bytedesign import Designer
 
-from django.shortcuts import render, redirect, reverse
+from django.db import transaction
+from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.http import HttpResponse
 from school.models import *
 from django.contrib.auth import logout
@@ -9,14 +10,11 @@ import random
 from datetime import datetime, date, timedelta
 from django.db.models.fields.files import ImageFieldFile, FileField
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
 from django.db.models import F, ExpressionWrapper, IntegerField
 from django.views import View
-from django.views.generic import CreateView
 from django.urls import reverse_lazy
 from school.models import Subquestion, Right_answer, Wrong_answer
-from .forms import SubquestionForm, RightAnswerForm, WrongAnswerForm
-from django.forms import modelformset_factory
+from .forms import *
 
 
 def register(request):
@@ -138,7 +136,8 @@ def make_worksheet(request):
             }
 
     wrong_answers_count = len(wrong_answered)
-    darsad = (len(correct_answered) / (len(correct_answered) + wrong_answers_count)) * 100 if (correct_answered or wrong_answers_count) else 0
+    darsad = (len(correct_answered) / (len(correct_answered) + wrong_answers_count)) * 100 if (
+                correct_answered or wrong_answers_count) else 0
 
     context = {
         'correct_answered': correct_answered,
@@ -256,7 +255,6 @@ class LeitnerView(View):
             except AttributeError:
                 pass
 
-
     def get(self, request):
 
         student = Student.objects.get(student=request.user)
@@ -364,6 +362,7 @@ class LeitnerView(View):
         return redirect('schoolview:leitner')
 
 
+@login_required(login_url='/login/')
 def student_profile(request, user_id):
     student = Student.objects.get(student=user_id)
     leitner = Leitner.objects.filter(student=student).first()
@@ -383,6 +382,7 @@ def student_profile(request, user_id):
     return render(request, 'school/student_profile.html', context)
 
 
+@login_required(login_url='/login/')
 def designer_profile(request, user_id):
     designer = Question_designer.objects.get(designer=user_id)
     context = {
@@ -391,7 +391,7 @@ def designer_profile(request, user_id):
     return render(request, 'school/designer_profile.html', context)
 
 
-@login_required
+@login_required(login_url='/login/')
 def edit_profile(request):
     if request.method == 'POST':
         user_form = EditProfileForm(request.POST, request.FILES, instance=request.user)
@@ -405,59 +405,103 @@ def edit_profile(request):
     return render(request, 'registration/edit_profile.html', context)
 
 
-@login_required
+@login_required(login_url='/login/')
 def questions(request, user_id):
     student = Student.objects.get(student=user_id)
     questions = Practice.objects.filter(student=student)
     return render(request, "school/questions.html", {'questions': questions})
 
 
-@login_required
+@login_required(login_url='/login/')
 def subquestion_create_view(request):
-    question_designer = Question_designer.objects.get(designer=request.user)  # دریافت طراح سوال
-
-    # فرم‌ست‌های اصلاح‌شده با prefix
-    RightAnswerFormSet = modelformset_factory(Right_answer, form=RightAnswerForm, extra=1, can_delete=True)
-    WrongAnswerFormSet = modelformset_factory(Wrong_answer, form=WrongAnswerForm, extra=1, can_delete=True)
+    question_designer = get_object_or_404(Question_designer, designer=request.user)
 
     if request.method == "POST":
         form = SubquestionForm(request.POST, request.FILES)
-        right_answer_formset = RightAnswerFormSet(
-            request.POST, request.FILES, queryset=Right_answer.objects.none(), prefix="right_answer"
-        )
-        wrong_answer_formset = WrongAnswerFormSet(
-            request.POST, request.FILES, queryset=Wrong_answer.objects.none(), prefix="wrong_answer"
-        )
-
-        if form.is_valid() and right_answer_formset.is_valid() and wrong_answer_formset.is_valid():
+        if form.is_valid():
             subquestion = form.save(commit=False)
             subquestion.question_designer = question_designer
             subquestion.save()
+            form.save_m2m()
+            return redirect("schoolview:right_answer_create", subquestion_id=subquestion.id)
 
-            # ذخیره جواب‌های درست
-            right_answers = right_answer_formset.save(commit=False)
-            for right_answer in right_answers:
-                right_answer.subquestion = subquestion  # تنظیم ارتباط با سوال
-                right_answer.save()
-
-            # ذخیره جواب‌های غلط
-            wrong_answers = wrong_answer_formset.save(commit=False)
-            for wrong_answer in wrong_answers:
-                wrong_answer.subquestion = subquestion  # تنظیم ارتباط با سوال
-                wrong_answer.save()
-
-            return redirect(reverse_lazy('schoolview:designer_profile'))
-
-        else:
-            print("Errors in formsets:", right_answer_formset.errors, wrong_answer_formset.errors)  # Debugging
-
-    else:
+    elif request.method == "GET":
         form = SubquestionForm()
-        right_answer_formset = RightAnswerFormSet(queryset=Right_answer.objects.none(), prefix="right_answer")
-        wrong_answer_formset = WrongAnswerFormSet(queryset=Wrong_answer.objects.none(), prefix="wrong_answer")
+    return render(request, 'forms/subquestion_form.html', {'form': form})
+    # return redirect("schoolview:index")
 
-    return render(request, 'forms/subquestion_form.html', {
-        'form': form,
-        'right_answer_formset': right_answer_formset,
-        'wrong_answer_formset': wrong_answer_formset
-    })
+
+@login_required(login_url='/login/')
+def right_answer_create_view(request, subquestion_id):
+    subquestion = Subquestion.objects.get(id=subquestion_id)
+
+    if request.method == "POST":
+        formset = RightAnswerFormSet(request.POST, request.FILES)
+        if formset.is_valid():
+            answers = formset.save(commit=False)
+            for answer in answers:
+                answer.subquestion = subquestion
+                answer.save()
+            print(subquestion.id)
+            return redirect('schoolview:wrong_answer_create', subquestion_id=subquestion.id)
+    else:
+        formset = RightAnswerFormSet(queryset=Right_answer.objects.filter(subquestion=subquestion))
+
+    return render(request, 'forms/right_answer_form.html', {'formset': formset, 'subquestion': subquestion})
+
+
+@login_required(login_url='/login/')
+def wrong_answer_create_view(request, subquestion_id):
+    subquestion = Subquestion.objects.get(id=subquestion_id)
+
+    if request.method == "POST":
+        formset = WrongAnswerFormSet(request.POST, request.FILES)
+        if formset.is_valid():
+            answers = formset.save(commit=False)
+            for answer in answers:
+                answer.subquestion = subquestion
+                answer.save()
+            return redirect('schoolview:index')
+    else:
+        formset = WrongAnswerFormSet(queryset=Wrong_answer.objects.filter(subquestion=subquestion))
+
+    return render(request, 'forms/wrong_answer_form.html', {'formset': formset, 'subquestion': subquestion})
+
+
+@login_required(login_url='/login/')
+def create_full_hierarchy_view(request):
+    question_designer = get_object_or_404(Question_designer, designer=request.user)
+
+    if request.method == "POST":
+        # مقادیر را از request.POST دریافت می‌کنیم
+        course_name = request.POST.get("course_name")
+        book_name = request.POST.get("book_name")
+        season_name = request.POST.get("season_name")
+        lesson_name = request.POST.get("lesson_name")
+        subject_name = request.POST.get("subject_name")
+
+        course = Course.objects.create(name=course_name, designer=question_designer)
+
+        book = Book.objects.create(name=book_name, course=course)
+
+        season = Season.objects.create(name=season_name, book=book)
+
+        lesson = Lesson.objects.create(name=lesson_name, season=season)
+
+        Subject.objects.create(name=subject_name, lesson=lesson)
+
+        return redirect('schoolview:index')
+
+    return render(request, 'forms/create_full_hierarchy.html')
+
+
+def create_question(request):
+    get_object_or_404(Question_designer, designer=request.user)
+    if request.method == "POST":
+        form = QuestionForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('schoolview:index')
+    else:
+        form = QuestionForm()
+    return render(request, 'forms/create_question.html', {'form': form})

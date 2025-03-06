@@ -1,0 +1,12 @@
+{% extends 'parent/base.html' %}
+{% load static %}
+{% block title %}ثبت صورت سوال{% endblock %}
+{% block content %}
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">ثبت</button>
+    </form>
+
+{% endblock %}
