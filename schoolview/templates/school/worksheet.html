@@ -8,29 +8,35 @@
     <!-- بخش پاسخ‌های درست -->
     <div class="answers-section correct-answers">
         <h3 class="section-title">✅ پاسخ‌های درست</h3>
-        {% for key, value in correct_answered.items %}
-            <div class="answer-item">
-                <span class="question-number">{{ key }}.</span>
-                <span class="question-text">{{ value }}</span>
+        {% for key, item in correct_answered.items %}
+            <div>
+                <p><strong>سوال:</strong> {{ item.question }}</p>
+                <p><strong>زیرسوال:</strong> {{ item.subquestion }}</p>
+                <p><strong>پاسخ شما:</strong> {{ item.user_answer }}</p>
+                <hr>
             </div>
-        {% empty %}
-            <p class="no-answers">شما به هیچ‌کدام از سوال‌ها پاسخ صحیح نداده‌اید.</p>
         {% endfor %}
     </div>
 
     <!-- بخش پاسخ‌های غلط -->
     <div class="answers-section wrong-answers">
         <h3 class="section-title">❌ پاسخ‌های غلط</h3>
-        {% for key, value in wrong_answered.items %}
+        {% for key, item in wrong_answered.items %}
             <div class="answer-item">
-                <span class="question-number">{{ key }}.</span>
-                <span class="question-text">{{ value.user_answer }}</span>
-                <span class="correct-answer-text">(پاسخ صحیح: {{ value.correct_answer }})</span>
+                <p><strong>سوال:</strong> {{ item.question }}</p>
+                <hr>
+                <p><strong>زیرسوال:</strong> {{ item.subquestion }}</p>
+                <hr>
+                <p><strong>پاسخ شما:</strong> {{ item.user_answer }}</p>
+                <hr>
+                <p><strong>پاسخ صحیح:</strong> {{ item.correct_answer }}</p>
+                <hr>
             </div>
         {% empty %}
             <p class="no-answers">شما به هیچ‌کدام از سوال‌ها پاسخ غلط نداده‌اید.</p>
         {% endfor %}
     </div>
+
 
     <!-- خلاصه آزمون -->
     <div class="exam-summary">

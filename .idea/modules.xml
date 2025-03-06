@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/moalemyarapi.iml" filepath="$PROJECT_DIR$/.idea/moalemyarapi.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../venvweblearn/.idea/venvweblearn.iml" filepath="$PROJECT_DIR$/../venvweblearn/.idea/venvweblearn.iml" />
     </modules>
   </component>
 </project>

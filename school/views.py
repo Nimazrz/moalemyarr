@@ -275,7 +275,7 @@ class LeitnerAPIView(APIView):
         )
 
     def post(self, request):
-        print(":hello")
+        print(request.data)
         """
             {
               "answers": [
@@ -286,11 +286,13 @@ class LeitnerAPIView(APIView):
         """
         student = get_object_or_404(Student, student=request.user)
         right_answers = request.session.get("right_answers", [])
+        print(right_answers)
 
         user_answers_list = request.data.get("answers", [])
         user_answers = {str(item["question_id"]): item["answer_id"] for item in user_answers_list}
         right_answers_dict = {}
         for answer in right_answers:
+            print("halge")
             subquestion_id = answer['subquestion_id']
             if subquestion_id not in right_answers_dict:
                 right_answers_dict[subquestion_id] = []
@@ -298,6 +300,7 @@ class LeitnerAPIView(APIView):
         results = []
         leitner = Leitner.objects.filter(student=student).first()
         for subquestion_id, user_answer_id in user_answers.items():
+            print("for loop")
             subquestion_id = int(subquestion_id)
             user_answer_id = int(user_answer_id)
 
@@ -315,7 +318,9 @@ class LeitnerAPIView(APIView):
             leitner_question = Leitner_question.objects.get(subquestion_id=subquestion_id)
 
             practice = Practice.objects.filter(subquestion__id=subquestion_id).first()
+            print("in para")
             if not practice:
+                print("practice")
                 if student:
                     subquestion = Subquestion.objects.get(id=subquestion_id)
                     practice = Practice.objects.create(
@@ -328,7 +333,7 @@ class LeitnerAPIView(APIView):
                     practice.subquestion.add(subquestion)
 
             if is_correct:
-                print("hi")
+                print("correct")
                 leitner.last_step += 1
                 leitner.datel = date.today()
                 leitner.save()
@@ -342,6 +347,7 @@ class LeitnerAPIView(APIView):
                 practice.date = date.today()
                 practice.save()
             else:
+                print("incorrect")
                 leitner.last_step += 1
                 leitner.datel = date.today()
                 leitner.save()

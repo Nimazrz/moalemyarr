@@ -109,21 +109,37 @@ def exam(request):
 def make_worksheet(request):
     correct_answers_sesh = request.session.get('correct_answers', {})
     user_answers = request.session.get('user_answers', {})
-    correct_answered = {k: v for k, v in correct_answers_sesh.items() if user_answers.get(k) == v}
-    wrong_answered = {k: user_answers.get(k, '') for k in correct_answers_sesh if
-                      user_answers.get(k) != correct_answers_sesh[k]}
+    questions_data = request.session.get('questions_data', {})
 
-    for key in list(wrong_answered.keys()):
-        wrong_answered[f"correct_answer_{key}"] = correct_answers_sesh[key]
+    correct_answered = {}
+    wrong_answered = {}
 
-    request.session.update({
-        'wrong_answered': wrong_answered,
-        'correct_answered': correct_answered
-    })
+    for key, correct_answer in correct_answers_sesh.items():
+        user_answer = user_answers.get(key, '')
 
-    wrong_answers_count = sum(1 for key in wrong_answered if key.startswith('correct_answer_'))
-    darsad = (len(correct_answered) / (
-            len(correct_answered) + wrong_answers_count)) * 100 if correct_answered or wrong_answers_count else 0
+        # اطلاعات سوال مربوطه
+        question_data = questions_data.get(key, {})
+        question_text = question_data.get("question_text", "سوال یافت نشد")
+        subquestion_text = question_data.get("subquestion_text", "")
+
+        # اگر جواب صحیح داده شده
+        if user_answer == correct_answer:
+            correct_answered[key] = {
+                "question": question_text,
+                "subquestion": subquestion_text,
+                "user_answer": user_answer
+            }
+        else:
+            wrong_answered[key] = {
+                "question": question_text,
+                "subquestion": subquestion_text,
+                "user_answer": user_answer,
+                "correct_answer": correct_answer
+            }
+
+    wrong_answers_count = len(wrong_answered)
+    darsad = (len(correct_answered) / (len(correct_answered) + wrong_answers_count)) * 100 if (correct_answered or wrong_answers_count) else 0
+
     context = {
         'correct_answered': correct_answered,
         'wrong_answered': wrong_answered,
