@@ -1,0 +1,28 @@
+{% extends 'parent/base.html' %}
+{% block title %}ویرایش سوال{% endblock %}
+
+{% block content %}
+    <h2>ویرایش سوال</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <h3>سوال</h3>
+        {{ subquestion_form.as_p }}
+
+        <h3>جواب‌های درست</h3>
+        {% for form in right_answer_forms %}
+            {{ form.as_p }}
+        {% empty %}
+            <p>جواب درست ثبت نشده است.</p>
+        {% endfor %}
+
+        <h3>جواب‌های غلط</h3>
+        {% for form in wrong_answer_forms %}
+            {{ form.as_p }}
+        {% empty %}
+            <p>جواب غلط ثبت نشده است.</p>
+        {% endfor %}
+
+        <button type="submit">ذخیره تغییرات</button>
+    </form>
+{% endblock %}

@@ -23,4 +23,7 @@ urlpatterns = [
     path('profile/wrong-answer/create/<int:subquestion_id>/', views.wrong_answer_create_view, name='wrong_answer_create'),
     path('designer_profile/create-full-hierarchy/', views.create_full_hierarchy_view, name='create_full_hierarchy'),
     path('designer_profile/create_question/', views.create_question, name='create_question'),
+    path('designer_profile/<int:user_id>/designer-subquestions/', views.designer_subquestions, name='designer_subquestions'),
+    path('edit-subquestion/<int:subquestion_id>/', views.edit_subquestion, name='edit_subquestion'),
+    path('designer_profile/<int:user_id>/designer-questions/', views.designer_questions, name='designer_questions'),
 ]

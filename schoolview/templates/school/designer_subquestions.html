@@ -1,0 +1,54 @@
+{% extends 'parent/base.html' %}
+{% load static %}
+{% block title %}سوال ها{% endblock %}
+{% block content %}
+        <a href="{% url 'schoolview:subquestion_list'  %}">ساخت سوال جدید</a>
+
+    {% for subquestion in subquestions %}
+        <div class="question-box">
+            <h3>سوال:</h3>
+            <p>{{ subquestion.text }}</p>
+
+            {% if subquestion.image %}
+                <img src="{{ subquestion.image.url }}" alt="تصویر سوال" style="max-width: 300px;">
+            {% endif %}
+
+            <h4>جواب‌های درست:</h4>
+            {% for answer in subquestion.right_answer.all %}
+                <p>{{ answer.title }}</p>
+                {% if answer.image %}
+                    <img src="{{ answer.image.url }}" alt="تصویر جواب درست" style="max-width: 200px;">
+                {% endif %}
+                {% if answer.audio_file %}
+                    <audio controls>
+                        <source src="{{ answer.audio_file.url }}" type="audio/mpeg">
+                        مرورگر شما از پخش صوتی پشتیبانی نمی‌کند.
+                    </audio>
+                {% endif %}
+            {% empty %}
+                <p>جواب درست ثبت نشده است.</p>
+            {% endfor %}
+
+            <h4>جواب‌های غلط:</h4>
+            {% for answer in subquestion.wrong_answer.all %}
+                <p>{{ answer.title }}</p>
+                {% if answer.image %}
+                    <img src="{{ answer.image.url }}" alt="تصویر جواب غلط" style="max-width: 200px;">
+                {% endif %}
+                {% if answer.audio_file %}
+                    <audio controls>
+                        <source src="{{ answer.audio_file.url }}" type="audio/mpeg">
+                        مرورگر شما از پخش صوتی پشتیبانی نمی‌کند.
+                    </audio>
+                {% endif %}
+            {% empty %}
+                <p>جواب غلط ثبت نشده است.</p>
+            {% endfor %}
+
+            <hr>
+
+        <a href="{% url 'schoolview:edit_subquestion' subquestion.id %}">ویرایش</a>
+        </div>
+    {% endfor %}
+
+{% endblock %}

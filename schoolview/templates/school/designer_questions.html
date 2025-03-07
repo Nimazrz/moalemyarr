@@ -1,0 +1,14 @@
+{% extends 'parent/base.html' %}
+{% block title %} صورت سوال ها{% endblock %}
+
+{% block content %}
+    <a href="{% url 'schoolview:create_question' %}">ساخت صورت سوال</a>
+    <br>
+
+    {% for question in questions %}
+        {{ question }}
+        <br>
+
+    {% endfor %}
+
+{% endblock %}

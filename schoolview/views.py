@@ -1,5 +1,3 @@
-from turtledemo.bytedesign import Designer
-
 from django.db import transaction
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.http import HttpResponse
@@ -412,6 +410,15 @@ def questions(request, user_id):
     return render(request, "school/questions.html", {'questions': questions})
 
 
+def designer_subquestions(request, user_id):
+    question_designer = get_object_or_404(Question_designer, designer_id=user_id)
+    subquestions = Subquestion.objects.filter(question_designer=question_designer)
+    context = {
+        'question_designer': question_designer,
+        'subquestions': subquestions,
+    }
+    return render(request, 'school/designer_subquestions.html', context)
+
 @login_required(login_url='/login/')
 def subquestion_create_view(request):
     question_designer = get_object_or_404(Question_designer, designer=request.user)
@@ -495,6 +502,11 @@ def create_full_hierarchy_view(request):
     return render(request, 'forms/create_full_hierarchy.html')
 
 
+def designer_questions(request, user_id):
+    question_designer = get_object_or_404(Question_designer, designer_id=user_id)
+    questions = Question.objects.all()
+    return render(request, "school/designer_questions.html", {'questions': questions})
+
 def create_question(request):
     get_object_or_404(Question_designer, designer=request.user)
     if request.method == "POST":
@@ -505,3 +517,32 @@ def create_question(request):
     else:
         form = QuestionForm()
     return render(request, 'forms/create_question.html', {'form': form})
+
+
+def edit_subquestion(request, subquestion_id):
+    subquestion = get_object_or_404(Subquestion, id=subquestion_id)
+    right_answers = Right_answer.objects.filter(subquestion=subquestion)
+    wrong_answers = Wrong_answer.objects.filter(subquestion=subquestion)
+
+    if request.method == "POST":
+        subquestion_form = SubquestionForm(request.POST, request.FILES, instance=subquestion)
+        right_answer_forms = [RightAnswerForm(request.POST, request.FILES, prefix=str(i), instance=answer) for i, answer in enumerate(right_answers)]
+        wrong_answer_forms = [WrongAnswerForm(request.POST, request.FILES, prefix=str(i), instance=answer) for i, answer in enumerate(wrong_answers)]
+
+        if subquestion_form.is_valid() and all(form.is_valid() for form in right_answer_forms + wrong_answer_forms):
+            subquestion_form.save()
+            for form in right_answer_forms + wrong_answer_forms:
+                form.save()
+            return redirect('schoolview:designer_subquestions', request.user.id)
+
+    else:
+        subquestion_form = SubquestionForm(instance=subquestion)
+        right_answer_forms = [RightAnswerForm(prefix=str(i), instance=answer) for i, answer in enumerate(right_answers)]
+        wrong_answer_forms = [WrongAnswerForm(prefix=str(i), instance=answer) for i, answer in enumerate(wrong_answers)]
+
+    return render(request, 'forms/edit_subquestion.html', {
+        'subquestion_form': subquestion_form,
+        'right_answer_forms': right_answer_forms,
+        'wrong_answer_forms': wrong_answer_forms,
+        'subquestion': subquestion
+    })

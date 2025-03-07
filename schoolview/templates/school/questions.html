@@ -3,6 +3,9 @@
 {% block title %}Profile{% endblock %}
 {% block content %}
 
+{% if request.user.is_student %}
+
+
       <table>
         <thead>
             <tr>
@@ -29,4 +32,10 @@
             {% endfor %}
         </tbody>
     </table>
+
+{% else %}
+
+    hi
+
+{% endif %}
 {% endblock %}
