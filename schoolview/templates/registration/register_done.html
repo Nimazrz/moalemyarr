@@ -1,8 +1,10 @@
 {% extends 'parent/base.html' %}
 {% load static %}
-{% block title %}login{% endblock %}
+{% block title %}Successfully Registered{% endblock %}
 
 {% block content %}
-    <h1>you have Successfully registered</h1>
-
+<div class="registration-success-container">
+    <h1 class="registration-success-title">You have successfully registered!</h1>
+    <a href="{% url 'schoolview:login' %}" class="login-link">Login</a>
+</div>
 {% endblock %}

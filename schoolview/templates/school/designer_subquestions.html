@@ -2,53 +2,65 @@
 {% load static %}
 {% block title %}سوال ها{% endblock %}
 {% block content %}
-        <a href="{% url 'schoolview:subquestion_list'  %}">ساخت سوال جدید</a>
+    <div class="subquestion-container">
+        <!-- Create New Subquestion Button -->
+        <a href="{% url 'schoolview:subquestion_list' %}" class="create-button">ساخت سوال جدید</a>
 
-    {% for subquestion in subquestions %}
-        <div class="question-box">
-            <h3>سوال:</h3>
-            <p>{{ subquestion.text }}</p>
+        <!-- Subquestion List -->
+        {% for subquestion in subquestions %}
+            <div class="question-box">
+                <h3 class="question-title">سوال:</h3>
+                <p class="question-text">{{ subquestion.text }}</p>
 
-            {% if subquestion.image %}
-                <img src="{{ subquestion.image.url }}" alt="تصویر سوال" style="max-width: 300px;">
-            {% endif %}
-
-            <h4>جواب‌های درست:</h4>
-            {% for answer in subquestion.right_answer.all %}
-                <p>{{ answer.title }}</p>
-                {% if answer.image %}
-                    <img src="{{ answer.image.url }}" alt="تصویر جواب درست" style="max-width: 200px;">
+                <!-- Subquestion Image -->
+                {% if subquestion.image %}
+                    <img src="{{ subquestion.image.url }}" alt="تصویر سوال" class="question-image">
                 {% endif %}
-                {% if answer.audio_file %}
-                    <audio controls>
-                        <source src="{{ answer.audio_file.url }}" type="audio/mpeg">
-                        مرورگر شما از پخش صوتی پشتیبانی نمی‌کند.
-                    </audio>
-                {% endif %}
-            {% empty %}
-                <p>جواب درست ثبت نشده است.</p>
-            {% endfor %}
 
-            <h4>جواب‌های غلط:</h4>
-            {% for answer in subquestion.wrong_answer.all %}
-                <p>{{ answer.title }}</p>
-                {% if answer.image %}
-                    <img src="{{ answer.image.url }}" alt="تصویر جواب غلط" style="max-width: 200px;">
-                {% endif %}
-                {% if answer.audio_file %}
-                    <audio controls>
-                        <source src="{{ answer.audio_file.url }}" type="audio/mpeg">
-                        مرورگر شما از پخش صوتی پشتیبانی نمی‌کند.
-                    </audio>
-                {% endif %}
-            {% empty %}
-                <p>جواب غلط ثبت نشده است.</p>
-            {% endfor %}
+                <!-- Correct Answers -->
+                <h4 class="answer-title">جواب‌های درست:</h4>
+                {% for answer in subquestion.right_answer.all %}
+                    <div class="answer-item">
+                        <p class="answer-text">{{ answer.title }}</p>
+                        {% if answer.image %}
+                            <img src="{{ answer.image.url }}" alt="تصویر جواب درست" class="answer-image">
+                        {% endif %}
+                        {% if answer.audio_file %}
+                            <audio controls class="answer-audio">
+                                <source src="{{ answer.audio_file.url }}" type="audio/mpeg">
+                                مرورگر شما از پخش صوتی پشتیبانی نمی‌کند.
+                            </audio>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <p class="no-answer">جواب درست ثبت نشده است.</p>
+                {% endfor %}
 
-            <hr>
+                <!-- Wrong Answers -->
+                <h4 class="answer-title">جواب‌های غلط:</h4>
+                {% for answer in subquestion.wrong_answer.all %}
+                    <div class="answer-item">
+                        <p class="answer-text">{{ answer.title }}</p>
+                        {% if answer.image %}
+                            <img src="{{ answer.image.url }}" alt="تصویر جواب غلط" class="answer-image">
+                        {% endif %}
+                        {% if answer.audio_file %}
+                            <audio controls class="answer-audio">
+                                <source src="{{ answer.audio_file.url }}" type="audio/mpeg">
+                                مرورگر شما از پخش صوتی پشتیبانی نمی‌کند.
+                            </audio>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <p class="no-answer">جواب غلط ثبت نشده است.</p>
+                {% endfor %}
 
-        <a href="{% url 'schoolview:edit_subquestion' subquestion.id %}">ویرایش</a>
-        </div>
-    {% endfor %}
-
+                <!-- Edit and Delete Buttons -->
+                <div class="action-buttons">
+                    <a href="{% url 'schoolview:edit_subquestion' subquestion.id %}" class="edit-button">ویرایش</a>
+                    <a href="{% url 'schoolview:delete_subquestion' user.id subquestion.id %}" class="delete-button"  onclick="return confirm('آیا مطمئن هستید که می‌خواهید این سوال را حذف کنید؟')">حذف</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
 {% endblock %}

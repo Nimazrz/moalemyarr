@@ -23,7 +23,13 @@ urlpatterns = [
     path('profile/wrong-answer/create/<int:subquestion_id>/', views.wrong_answer_create_view, name='wrong_answer_create'),
     path('designer_profile/create-full-hierarchy/', views.create_full_hierarchy_view, name='create_full_hierarchy'),
     path('designer_profile/create_question/', views.create_question, name='create_question'),
-    path('designer_profile/<int:user_id>/designer-subquestions/', views.designer_subquestions, name='designer_subquestions'),
+    path('designer_profile/edit_question/<int:question_id>/', views.edit_question, name='edit_question'),
+    path('designer_profile/delete_question/<int:question_id>/', views.delete_question, name='delete_question'),
+    path('designer_profile/<int:designer_id>/designer-subquestions/', views.designer_subquestions, name='designer_subquestions'),
     path('edit-subquestion/<int:subquestion_id>/', views.edit_subquestion, name='edit_subquestion'),
     path('designer_profile/<int:user_id>/designer-questions/', views.designer_questions, name='designer_questions'),
+    path('designer_profile/<int:designer_id>/student/<int:student_id>/', views.student_status_view, name='student_status'),
+    path('designer_profile/<int:designer_id>/designer-questions/<int:subquestion_id>/delete', views.delete_subquestion, name='delete_subquestion'),
+    path('student_profile/<int:student_id>/leitner_questions', views.student_leitner_questions, name='student_leitner_questions'),
+
 ]

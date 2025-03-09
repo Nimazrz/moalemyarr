@@ -1,0 +1,70 @@
+{% extends 'parent/base.html' %}
+{% load static %}
+{% block title %} وضعیت دانش آموز {% endblock %}
+{% block content %}
+<div class="student-status-container">
+    <h2 class="student-status-title">وضعیت دانش‌آموز: {{ student }}</h2>
+
+    <!-- Leitner Section -->
+    <h3 class="student-status-section-title">لایتنر</h3>
+    <ul class="student-status-list">
+        {% for item in student.leitner.all %}
+            <li class="student-status-item"> آخرین چک: {{ item.datel }} </li>
+        {% empty %}
+            <li class="student-status-empty">هیچ موردی در لایتنر وجود ندارد.</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Subquestions Section -->
+    <h3 class="student-status-section-title">زیرسوال‌ها</h3>
+    <ul class="student-status-list">
+        {% for subquestion in subquestions %}
+            <li class="student-status-item">
+                <strong class="student-status-strong">سؤال:</strong> {{ subquestion }}
+                <ul class="student-status-nested-list">
+                    {% for practice in practices %}
+                        {% if subquestion in practice.subquestion.all %}
+                            <li class="student-status-nested-item">
+                                <strong class="student-status-strong">تعداد غلط های پشت سر هم:</strong> {{ practice.zero }}
+                            </li>
+                            <li class="student-status-nested-item">
+                                <strong class="student-status-strong">تعداد نادرست:</strong> {{ practice.nf }}
+                            </li>
+                            <li class="student-status-nested-item">
+                                <strong class="student-status-strong">تعداد درست:</strong> {{ practice.nt }}
+                            </li>
+                            <li class="student-status-nested-item">
+                                <strong class="student-status-strong">تاریخ:</strong> {{ practice.date }}
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </li>
+        {% empty %}
+            <li class="student-status-empty">هیچ سوالی برای تمرین ثبت نشده است.</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Worksheets Section -->
+    <h3 class="student-status-section-title">کارنامه ها</h3>
+    {% if worksheets %}
+        <ul class="student-status-list">
+            {% for worksheet in worksheets %}
+                <li class="student-status-worksheet">
+                    <strong class="student-status-strong">تاریخ کارنامه:</strong> {{ worksheet.date }}
+                    <ul class="student-status-nested-list">
+                        <li class="student-status-nested-item">
+                            <strong class="student-status-strong">زمان کل:</strong> {{ worksheet.total_time }}
+                        </li>
+                        <li class="student-status-nested-item">
+                            <strong class="student-status-strong">زمان صرف شده:</strong> {{ worksheet.time_spent }}
+                        </li>
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="student-status-empty">هیچ کارنامه‌ای ثبت نشده است.</p>
+    {% endif %}
+</div>
+{% endblock %}

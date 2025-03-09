@@ -1,29 +1,40 @@
 {% extends 'parent/base.html' %}
 {% load static %}
-{% block title %}login{% endblock %}
+{% block title %}Login{% endblock %}
 
 {% block content %}
-    <h1>فرم زیر را پر کنید</h1>
-    <form method="post">
+<div class="login-container">
+    <h1 class="login-title">فرم زیر را پر کنید</h1>
+    <form method="post" class="login-form">
         {% csrf_token %}
         {{ form.as_p }}
-        <input type="submit">
+        <input type="submit" class="login-submit" value="ورود">
     </form>
 
-
+    <!-- Display Form Errors -->
     {% if form.errors %}
-    لطفا خطای زیر را اصلاح کنید
-    <br>
-    {% for field in form %}
-        {% if field.errors %}
-            {% for error in field.errors %}
-                {{ field.label }} : {{error}}
-            {% endfor %}
-        {% endif %}
-    {% endfor %}
-{% endif %}
-{% if form.non_field_errors %}
-    {{form.non_field_errors}}
-{% endif %}
+        <div class="form-errors">
+            <p>لطفا خطای زیر را اصلاح کنید:</p>
+            <ul>
+                {% for field in form %}
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
 
+    {% if form.non_field_errors %}
+        <div class="form-errors">
+            <ul>
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

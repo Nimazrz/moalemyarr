@@ -6,7 +6,7 @@
 <div class="profile-container">
     <div class="profile-header">
         {% if student.student.profile %}
-            <img src="{{ student.student.profile.url }}" alt="photo" class="rounded-image">
+            <a href="{% url 'schoolview:edit_profile' %}"><img src="{{ student.student.profile.url }}" alt="photo" class="rounded-image"></a>
         {% endif %}
         <h1>Hello {{ user.username }}</h1>
     </div>
@@ -49,10 +49,8 @@
 
 
     <div class="logout-section">
-        <a href="{% url 'schoolview:edit_profile' %}" class="logout-button">edit profile</a>
-
         <a href="{% url 'schoolview:logout' %}" class="logout-button">Logout</a>
     </div>
 </div>
-
+<a href="{% url 'schoolview:student_leitner_questions' student.id %}">سوالات لایتنر</a>
 {% endblock %}

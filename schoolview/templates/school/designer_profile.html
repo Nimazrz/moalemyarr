@@ -1,7 +1,33 @@
-hello designer
-<br>
-<a href="{% url 'schoolview:create_full_hierarchy'  %}">ساخت سلسله مراتب جدید</a>
-<br>
-<a href="{% url 'schoolview:designer_questions' user.id %}">سوالات</a>
-<br>
-<a href="{% url 'schoolview:designer_subquestions' user_id=request.user.id %}">سوالات طرح شده</a>
+{% extends 'parent/base.html' %}
+{% load static %}
+{% block title %}ثبت صورت سوال{% endblock %}
+{% block content %}
+    <div class="designer-dashboard">
+        <div class="profile-header">
+            {% if designer.designer.profile %}
+               <a href="{% url 'schoolview:edit_profile' %}"> <img src="{{ designer.designer.profile.url }}" alt="photo" class="rounded-image"></a>
+            {% endif %}
+            <h1>Hello {{ user.username }}</h1>
+        </div>
+
+
+        <!-- Main Links -->
+        <div class="main-links">
+            <a href="{% url 'schoolview:create_full_hierarchy' %}" class="main-link">ساخت سلسله مراتب جدید</a>
+            <br>
+            <a href="{% url 'schoolview:designer_questions' user.id %}" class="main-link">صورت سوالات</a>
+            <br>
+            <a href="{% url 'schoolview:designer_subquestions' request.user.id %}" class="main-link">سوالات طرح شده</a>
+            <br>
+        </div>
+
+        <!-- Students Section -->
+        <h3 class="students-title">دانش‌آموزان</h3>
+        <div class="student-links">
+            {% for student in students %}
+                <a href="{% url 'schoolview:student_status' user.id student.id %}" class="student-link">{{ student }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+{% endblock %}

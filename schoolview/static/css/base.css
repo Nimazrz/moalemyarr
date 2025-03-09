@@ -647,3 +647,484 @@ form input[type="submit"]:active {
 .register-link:active {
     background-color: #004085; /* Even darker blue when clicked */
 }
+
+/* General container for the designer dashboard */
+.designer-dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Title styling */
+.dashboard-title {
+    font-size: 28px;
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Main links styling */
+.main-links {
+    margin-bottom: 30px;
+}
+
+.main-link {
+    display: inline-block;
+    margin: 10px 0;
+    padding: 12px 24px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.main-link:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+/* Students section styling */
+.students-title {
+    font-size: 24px;
+    color: #007bff;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 5px;
+}
+
+.student-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.student-link {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.student-link:hover {
+    background-color: #218838;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .designer-dashboard {
+        padding: 10px;
+    }
+
+    .dashboard-title {
+        font-size: 24px;
+    }
+
+    .main-link {
+        width: 100%;
+        text-align: center;
+    }
+
+    .student-link {
+        width: calc(50% - 5px); /* Two links per row on small screens */
+    }
+}
+      /*----------------*/
+
+      /* General container */
+.subquestion-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Create New Subquestion Button */
+.create-button {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 12px 24px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.create-button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+/* Question Box */
+.question-box {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    transition: box-shadow 0.3s;
+}
+
+.question-box:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Question Title */
+.question-title {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+/* Question Image */
+.question-image {
+    max-width: 200px; /* Adjust this value to make the image smaller */
+    height: auto; /* Maintain aspect ratio */
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+/* Answer Image */
+.answer-image {
+    max-width: 150px; /* Adjust this value to make the image smaller */
+    height: auto; /* Maintain aspect ratio */
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+/* Answer Title */
+.answer-title {
+    font-size: 20px;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+/* Answer Item */
+.answer-item {
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #ffffff;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+}
+
+/* Answer Text */
+.answer-text {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+/* Answer Image */
+.answer-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+/* Answer Audio */
+.answer-audio {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+/* No Answer Text */
+.no-answer {
+    font-size: 16px;
+    color: #777;
+    font-style: italic;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px dashed #e0e0e0;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Edit Button */
+.edit-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+/* Delete Button */
+.delete-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #ae123a;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.edit-button:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .subquestion-container {
+        padding: 15px;
+    }
+
+    .question-box {
+        padding: 15px;
+    }
+
+    .question-title {
+        font-size: 20px;
+    }
+
+    .answer-title {
+        font-size: 18px;
+    }
+
+    .create-button, .edit-button {
+        width: 100%;
+        text-align: center;
+    }
+}
+/*---------------*/
+      /* General container */
+.student-status-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Title styling */
+.student-status-title {
+    font-size: 28px;
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Section titles */
+.student-status-section-title {
+    font-size: 24px;
+    color: #007bff;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 5px;
+}
+
+/* Lists styling */
+.student-status-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.student-status-item {
+    background-color: #f9f9f9;
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.student-status-item:hover {
+    background-color: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.student-status-strong {
+    color: #333;
+    font-weight: bold;
+}
+
+.student-status-nested-list {
+    margin-top: 10px;
+    padding-left: 20px;
+}
+
+.student-status-nested-item {
+    background-color: #ffffff;
+    border: none;
+    padding: 8px;
+    margin-bottom: 5px;
+}
+
+.student-status-nested-item .student-status-strong {
+    color: #555;
+}
+
+/* Empty state styling */
+.student-status-empty {
+    text-align: center;
+    color: #777;
+    font-style: italic;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px dashed #e0e0e0;
+    border-radius: 5px;
+}
+
+/* Worksheet item styling */
+.student-status-worksheet {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 15px;
+}
+
+.student-status-worksheet .student-status-strong {
+    color: #007bff;
+}
+
+.student-status-worksheet .student-status-nested-list {
+    margin-top: 10px;
+}
+
+.student-status-worksheet .student-status-nested-item {
+    background-color: #f9f9f9;
+    padding: 8px;
+    border-radius: 3px;
+    margin-bottom: 5px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .student-status-container {
+        padding: 10px;
+    }
+
+    .student-status-title {
+        font-size: 24px;
+    }
+
+    .student-status-section-title {
+        font-size: 20px;
+    }
+
+    .student-status-item {
+        padding: 10px;
+    }
+
+    .student-status-nested-item {
+        padding: 6px;
+    }
+}
+/*------------*/
+      /* General container for logout page */
+.logout-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; /* Full viewport height */
+    background-color: #f9f9f9;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Logout title styling */
+.logout-title {
+    font-size: 32px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Logout link styling */
+.logout-link {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.logout-link:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .logout-title {
+        font-size: 24px;
+    }
+
+    .logout-link {
+        width: 100%;
+        text-align: center;
+    }
+}
+/*-------------*/
+/* General container for registration success page */
+.registration-success-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; /* Full viewport height */
+    background-color: #f9f9f9;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Registration success title styling */
+.registration-success-title {
+    font-size: 32px;
+    color: #28a745; /* Green color for success message */
+    margin-bottom: 20px;
+}
+
+/* Login link styling */
+.login-link {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.login-link:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .registration-success-title {
+        font-size: 24px;
+    }
+
+    .login-link {
+        width: 100%;
+        text-align: center;
+    }
+}

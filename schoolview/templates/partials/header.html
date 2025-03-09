@@ -1,26 +1,30 @@
 <header class="site-header">
- <div class="header-container">
+    <div class="header-container">
+        <!-- Logo -->
         <div class="logo">
-            <a href="/">TestGaam</a> <!-- لینک به صفحه اصلی -->
+            <a href="/">TestGaam</a> <!-- Link to the homepage -->
         </div>
+
+        <!-- User Menu -->
         <nav class="user-menu">
             {% if request.user.is_authenticated %}
+                <!-- Dropdown for authenticated users -->
                 <div class="dropdown">
-                    <a  class="profile-link username">{{ request.user.username }}</a>
+                    <a class="profile-link username">{{ request.user.username }}</a>
                     <div class="dropdown-content">
                         {% if user.is_student %}
-                        	<a href="{% url 'schoolview:student_profile' user.id %}"> پروفایل دانش اموز</a>
+                            <a href="{% url 'schoolview:student_profile' user.id %}">پروفایل دانش‌آموز</a>
                         {% endif %}
-                        
-                        {%if user.is_question_designer %}
-                           <a href="{% url 'schoolview:designer_profile' user.id %}"> پروفایل طراح سوال</a>
+
+                        {% if user.is_question_designer %}
+                            <a href="{% url 'schoolview:designer_profile' user.id %}">پروفایل طراح سوال</a>
                         {% endif %}
-                        
 
                         <a href="{% url 'schoolview:logout' %}">خروج</a>
                     </div>
                 </div>
             {% else %}
+                <!-- Login link for guests -->
                 <a href="{% url 'schoolview:login' %}" class="login-link">Login</a>
             {% endif %}
         </nav>

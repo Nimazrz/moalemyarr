@@ -1,7 +1,8 @@
 {% extends 'parent/base.html' %}
 {% block title %}{{ user }}'s profile{% endblock %}
 {% block content %}
-<h1>خارج شدید</h1>
-
-<a style="margin-top: 10000px;color: black" href="{% url 'schoolview:index' %}">بازگشت به صفحه اصلی</a>
+<div class="logout-container">
+    <h1 class="logout-title">خارج شدید</h1>
+    <a href="{% url 'schoolview:index' %}" class="logout-link">بازگشت به صفحه اصلی</a>
+</div>
 {% endblock %}

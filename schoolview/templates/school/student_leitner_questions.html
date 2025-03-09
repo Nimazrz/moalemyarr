@@ -1,0 +1,23 @@
+{% extends 'parent/base.html' %}
+{% load teacher_tags %}
+{% load static %}
+{% block title %}سوالات لایتنر دانش اموز{% endblock %}
+{% block content %}
+   <table border="1">
+        <thead>
+            <tr>
+                <th>متن سوال</th>
+                <th>وضعیت</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for question in question_status %}
+                <tr>
+                    <td>{{ question.text }}</td>  <!-- نمایش متن سوال -->
+                    <td>{{ question.status }}</td>  <!-- نمایش وضعیت سوال -->
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

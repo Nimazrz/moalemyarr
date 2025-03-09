@@ -2,13 +2,34 @@
 {% block title %} صورت سوال ها{% endblock %}
 
 {% block content %}
-    <a href="{% url 'schoolview:create_question' %}">ساخت صورت سوال</a>
-    <br>
+    <div class="question-container">
+        <!-- Create New Question Button -->
+        <a href="{% url 'schoolview:create_question' %}" class="create-button">ساخت صورت سوال</a>
 
-    {% for question in questions %}
-        {{ question }}
-        <br>
+        <!-- Question List -->
+        {% for question in questions %}
+            <div class="question-box">
+                <p class="question-text">{{ question.title }}</p>
 
-    {% endfor %}
+                <!-- Display Question Image -->
+                {% if question.image %}
+                    <div class="question-media">
+                        <img src="{{ question.image.url }}" alt="تصویر سوال" class="question-image">
+                    </div>
+                {% endif %}
 
+                <!-- Display Question File -->
+                {% if question.file %}
+                    <div class="question-media">
+                        <a href="{{ question.file.url }}" class="file-link" target="_blank">دانلود فایل</a>
+                    </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="{% url 'schoolview:edit_question' question.id %}" class="edit-button">ویرایش</a>
+                    <a href="{% url 'schoolview:delete_question' question.id %}" class="delete-button" onclick="return confirm('آیا مطمئن هستید که می‌خواهید این سوال را حذف کنید؟')">حذف</a></div>
+            </div>
+        {% endfor %}
+    </div>
 {% endblock %}

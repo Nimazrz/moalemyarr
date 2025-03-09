@@ -73,12 +73,16 @@ def exam(request):
             wrong_answers = list(Wrong_answer.objects.filter(subquestion=subquestion).order_by('?')[:3])
             all_answers = [correct_answer] + wrong_answers
             random.shuffle(all_answers)
+            if subquestion.question:
+                question_text = subquestion.question.title
+            else:
+                question_text = ""
 
             key = f"question_{idx}"
             questions_data[key] = {
                 "subquestion_number": str(idx),
                 "subquestion_id": subquestion.id,
-                "question_text": subquestion.question.title,
+                "question_text":question_text ,
                 "subquestion_text": subquestion.text,
                 "subquestion_image": serialize_value(subquestion.image),
                 "subquestion_time": subquestion.time,
@@ -87,7 +91,6 @@ def exam(request):
 
             exam_data['total_time'] += subquestion.time
             correct_answers[key] = correct_answer.title
-
         request.session.update({
             'exam_data': exam_data,
             'questions_data': questions_data,
@@ -135,7 +138,8 @@ def make_worksheet(request):
 
     wrong_answers_count = len(wrong_answered)
     darsad = (len(correct_answered) / (len(correct_answered) + wrong_answers_count)) * 100 if (
-                correct_answered or wrong_answers_count) else 0
+            correct_answered or wrong_answers_count) else 0
+    request.session['correct_answered'] = correct_answered
 
     context = {
         'correct_answered': correct_answered,
@@ -169,6 +173,7 @@ def save_worksheet(request):
 
         # practice
         if not existing_practice:
+            print("helo")
             nt = nf = zero = 0
             try:
                 if correct_answered[key] in correct_answers_from_db:
@@ -190,13 +195,16 @@ def save_worksheet(request):
             new_practice.save()
         else:
             try:
-                if correct_answered[key] in correct_answers_from_db:
+                # Extract the user's answer from correct_answered
+                user_answer = correct_answered[key]["user_answer"]
+                if user_answer in correct_answers_from_db:
+                    print("correct")
                     existing_practice.nt += 1
                     existing_practice.zero = 0
                     existing_practice.date = date.today()
                     existing_practice.save()
-
             except KeyError:
+                print("wrong")
                 existing_practice.nf += 1
                 existing_practice.zero += 1
                 existing_practice.date = date.today()
@@ -217,7 +225,7 @@ def save_worksheet(request):
     request.session.pop('wrong_answered', None)
     request.session.pop('correct_answered', None)
 
-    return HttpResponse({"Worksheet saved successfully!"})
+    return redirect('schoolview:student_profile', request.user.id)
 
 
 class LeitnerView(View):
@@ -287,12 +295,16 @@ class LeitnerView(View):
                 wrong_answers = list(Wrong_answer.objects.filter(subquestion=subquestion).order_by('?')[:3])
                 all_answers = [correct_answer] + wrong_answers
                 random.shuffle(all_answers)
+                if subquestion.question:
+                    subquestion_question_title = subquestion.question.title
+                else:
+                    subquestion_question_title = ""
 
                 key = f"question_{idx}"
                 self.questions_data[key] = {
                     "subquestion_number": str(idx),
                     "subquestion_id": subquestion.id,
-                    "question_text": subquestion.question.title,
+                    "question_text": subquestion_question_title,
                     "subquestion_text": subquestion.text,
                     "subquestion_image": serialize_value(subquestion.image),
                     "answers": [{"text": ans.title, "is_correct": ans == correct_answer} for ans in all_answers]
@@ -383,8 +395,11 @@ def student_profile(request, user_id):
 @login_required(login_url='/login/')
 def designer_profile(request, user_id):
     designer = Question_designer.objects.get(designer=user_id)
+    students = Student.objects.all().exclude(id=user_id)
     context = {
         'designer': designer,
+        'students': students,
+
     }
     return render(request, 'school/designer_profile.html', context)
 
@@ -409,15 +424,6 @@ def questions(request, user_id):
     questions = Practice.objects.filter(student=student)
     return render(request, "school/questions.html", {'questions': questions})
 
-
-def designer_subquestions(request, user_id):
-    question_designer = get_object_or_404(Question_designer, designer_id=user_id)
-    subquestions = Subquestion.objects.filter(question_designer=question_designer)
-    context = {
-        'question_designer': question_designer,
-        'subquestions': subquestions,
-    }
-    return render(request, 'school/designer_subquestions.html', context)
 
 @login_required(login_url='/login/')
 def subquestion_create_view(request):
@@ -468,7 +474,7 @@ def wrong_answer_create_view(request, subquestion_id):
             for answer in answers:
                 answer.subquestion = subquestion
                 answer.save()
-            return redirect('schoolview:index')
+            return redirect('schoolview:designer_subquestions', request.user.id)
     else:
         formset = WrongAnswerFormSet(queryset=Wrong_answer.objects.filter(subquestion=subquestion))
 
@@ -497,7 +503,7 @@ def create_full_hierarchy_view(request):
 
         Subject.objects.create(name=subject_name, lesson=lesson)
 
-        return redirect('schoolview:index')
+        return redirect('schoolview:designer_profile', request.user.id)
 
     return render(request, 'forms/create_full_hierarchy.html')
 
@@ -507,16 +513,48 @@ def designer_questions(request, user_id):
     questions = Question.objects.all()
     return render(request, "school/designer_questions.html", {'questions': questions})
 
+
 def create_question(request):
     get_object_or_404(Question_designer, designer=request.user)
     if request.method == "POST":
         form = QuestionForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect('schoolview:index')
+            return redirect('schoolview:designer_questions', request.user.id)
     else:
         form = QuestionForm()
     return render(request, 'forms/create_question.html', {'form': form})
+
+
+def edit_question(request, question_id):
+    question = get_object_or_404(Question, id=question_id)
+    if request.method == "POST":
+        form = QuestionForm(request.POST, request.FILES,  instance=question)
+        if form.is_valid():
+            form.save()
+            return redirect('schoolview:designer_questions', request.user.id)
+    else:
+        form = QuestionForm(instance=question)
+    return render(request, 'forms/edit_question.html', {
+        'form': form,
+        'question': question
+    })
+
+
+def delete_question(request, question_id):
+    question = get_object_or_404(Question, id=question_id)
+    question.delete()
+    return redirect('schoolview:designer_questions', request.user.id)
+
+
+def designer_subquestions(request, designer_id):
+    question_designer = get_object_or_404(Question_designer, designer_id=designer_id)
+    subquestions = Subquestion.objects.filter(question_designer=question_designer)
+    context = {
+        'question_designer': question_designer,
+        'subquestions': subquestions,
+    }
+    return render(request, 'school/designer_subquestions.html', context)
 
 
 def edit_subquestion(request, subquestion_id):
@@ -526,19 +564,25 @@ def edit_subquestion(request, subquestion_id):
 
     if request.method == "POST":
         subquestion_form = SubquestionForm(request.POST, request.FILES, instance=subquestion)
-        right_answer_forms = [RightAnswerForm(request.POST, request.FILES, prefix=str(i), instance=answer) for i, answer in enumerate(right_answers)]
-        wrong_answer_forms = [WrongAnswerForm(request.POST, request.FILES, prefix=str(i), instance=answer) for i, answer in enumerate(wrong_answers)]
+        right_answer_forms = [RightAnswerForm(request.POST, request.FILES, prefix=f"right-{answer.id}", instance=answer)
+                              for answer in right_answers]
+        wrong_answer_forms = [WrongAnswerForm(request.POST, request.FILES, prefix=f"wrong-{answer.id}", instance=answer)
+                              for answer in wrong_answers]
 
         if subquestion_form.is_valid() and all(form.is_valid() for form in right_answer_forms + wrong_answer_forms):
             subquestion_form.save()
             for form in right_answer_forms + wrong_answer_forms:
-                form.save()
+                answer = form.save(commit=False)
+                answer.subquestion = subquestion
+                answer.save()
             return redirect('schoolview:designer_subquestions', request.user.id)
+        else:
+            raise ValueError
 
     else:
         subquestion_form = SubquestionForm(instance=subquestion)
-        right_answer_forms = [RightAnswerForm(prefix=str(i), instance=answer) for i, answer in enumerate(right_answers)]
-        wrong_answer_forms = [WrongAnswerForm(prefix=str(i), instance=answer) for i, answer in enumerate(wrong_answers)]
+        right_answer_forms = [RightAnswerForm(prefix=f"right-{answer.id}", instance=answer) for answer in right_answers]
+        wrong_answer_forms = [WrongAnswerForm(prefix=f"wrong-{answer.id}", instance=answer) for answer in wrong_answers]
 
     return render(request, 'forms/edit_subquestion.html', {
         'subquestion_form': subquestion_form,
@@ -546,3 +590,76 @@ def edit_subquestion(request, subquestion_id):
         'wrong_answer_forms': wrong_answer_forms,
         'subquestion': subquestion
     })
+
+
+def delete_subquestion(request, designer_id, subquestion_id):
+    subquestion = get_object_or_404(Subquestion, id=subquestion_id)
+    subquestion.delete()
+    return redirect('schoolview:designer_subquestions', request.user.id)
+
+
+def student_status_view(request, designer_id, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    leitner = Leitner.objects.filter(student=student)
+    exams = Practice.objects.filter(student=student)
+    worksheets = Question_practice_worksheet.objects.filter(student=student).order_by('-date')
+    practices = Practice.objects.filter(student=student)
+    subquestions = Subquestion.objects.filter(practice__student=student).distinct()
+
+    context = {
+        'student': student,
+        'leitner': leitner,
+        'exams': exams,
+        'worksheets': worksheets,
+        'practices': practices,
+        'subquestions': subquestions
+    }
+    return render(request, 'school/student_status.html', context)
+
+
+def student_leitner_questions(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    subquestions = Subquestion.objects.all()
+    leitner_questions = Leitner_question.objects.filter(student=student)
+    question_status = []
+
+    for subquestion in subquestions:
+        if leitner_questions.filter(subquestion=subquestion).exists():
+            status = "موجود در لایتنر"
+        else:
+            status = "موجود نیست در لایتنر"
+        question_status.append({
+            'text': subquestion.text,
+            'status': status
+        })
+
+    context = {
+        'student': student,
+        'question_status': question_status,
+    }
+
+    return render(request, 'school/student_leitner_questions.html', context)
+
+
+def add_to_leitner(request, subquestion_id):
+    if request.user.is_student:
+        student = get_object_or_404(Student, id=request.user.id)
+    else:
+        pass
+    subquestion = get_object_or_404(Subquestion, id=subquestion_id)
+
+    # بررسی آیا سوال قبلاً در لایتنر اضافه شده است
+    if not Leitner_question.objects.filter(student=student, subquestion=subquestion).exists():
+        Leitner_question.objects.create(student=student, subquestion=subquestion)
+
+    return redirect('student_leitner_questions', student_id=student.id)
+
+
+def remove_from_leitner(request, subquestion_id):
+    student = get_object_or_404(Student, id=request.user.id)
+    subquestion = get_object_or_404(Subquestion, id=subquestion_id)
+
+    # حذف سوال از لایتنر
+    Leitner_question.objects.filter(student=student, subquestion=subquestion).delete()
+
+    return redirect('student_leitner_questions', student_id=student.id)
