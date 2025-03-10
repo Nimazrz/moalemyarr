@@ -31,5 +31,6 @@ urlpatterns = [
     path('designer_profile/<int:designer_id>/student/<int:student_id>/', views.student_status_view, name='student_status'),
     path('designer_profile/<int:designer_id>/designer-questions/<int:subquestion_id>/delete', views.delete_subquestion, name='delete_subquestion'),
     path('student_profile/<int:student_id>/leitner_questions', views.student_leitner_questions, name='student_leitner_questions'),
-
+    path('student_profile/<int:student_id>/leitner_questions/<int:subquestion_id>/add/', views.add_to_leitner, name='add_to_leitner'),
+    path('student_profile/<int:student_id>/leitner_questions/<int:subquestion_id>/remove/', views.remove_from_leitner, name='remove_from_leitner'),
 ]

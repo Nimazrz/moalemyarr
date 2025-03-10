@@ -7,6 +7,7 @@
 
     <!-- Leitner Section -->
     <h3 class="student-status-section-title">لایتنر</h3>
+    <a href="{% url 'schoolview:student_leitner_questions' student.id %}">سوالات لایتنر</a>
     <ul class="student-status-list">
         {% for item in student.leitner.all %}
             <li class="student-status-item"> آخرین چک: {{ item.datel }} </li>

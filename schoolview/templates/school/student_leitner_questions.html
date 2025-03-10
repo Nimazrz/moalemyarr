@@ -8,13 +8,21 @@
             <tr>
                 <th>متن سوال</th>
                 <th>وضعیت</th>
+                <th>اقدام</th>
             </tr>
         </thead>
         <tbody>
             {% for question in question_status %}
                 <tr>
-                    <td>{{ question.text }}</td>  <!-- نمایش متن سوال -->
-                    <td>{{ question.status }}</td>  <!-- نمایش وضعیت سوال -->
+                    <td>{{ question.text }}</td>
+                    {% if question.status %}
+                        <td>موجود در لایتنر</td>
+                        <td><a href="{% url 'schoolview:remove_from_leitner' student.id question.id %}">حذف از لایتنر</a></td>
+                    {% else %}
+                        <td>موجود نیست در لایتنر</td>
+                        <td><a href="{% url 'schoolview:add_to_leitner' student.id question.id %}">اضافه کردن به لایتنر</a></td>
+
+                    {% endif %}
                 </tr>
             {% endfor %}
         </tbody>

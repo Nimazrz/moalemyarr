@@ -82,7 +82,7 @@ def exam(request):
             questions_data[key] = {
                 "subquestion_number": str(idx),
                 "subquestion_id": subquestion.id,
-                "question_text":question_text ,
+                "question_text": question_text,
                 "subquestion_text": subquestion.text,
                 "subquestion_image": serialize_value(subquestion.image),
                 "subquestion_time": subquestion.time,
@@ -173,7 +173,6 @@ def save_worksheet(request):
 
         # practice
         if not existing_practice:
-            print("helo")
             nt = nf = zero = 0
             try:
                 if correct_answered[key] in correct_answers_from_db:
@@ -198,13 +197,11 @@ def save_worksheet(request):
                 # Extract the user's answer from correct_answered
                 user_answer = correct_answered[key]["user_answer"]
                 if user_answer in correct_answers_from_db:
-                    print("correct")
                     existing_practice.nt += 1
                     existing_practice.zero = 0
                     existing_practice.date = date.today()
                     existing_practice.save()
             except KeyError:
-                print("wrong")
                 existing_practice.nf += 1
                 existing_practice.zero += 1
                 existing_practice.date = date.today()
@@ -237,8 +234,6 @@ class LeitnerView(View):
     def upgrade_subquestions(self, student):
         leitner = Leitner.objects.filter(student=student).first()
         leitner_questions = []
-        # leitner_question = None
-
         if leitner.last_step == 1:
             leitner_questions = Leitner_question.objects.filter(n__range=(15, 29))
         elif leitner.last_step == 2:
@@ -247,14 +242,12 @@ class LeitnerView(View):
             leitner_questions = Leitner_question.objects.filter(n__range=(3, 5))
         elif leitner.last_step == 4:
             leitner_questions = Leitner_question.objects.filter(n=1)
-        elif leitner.last_step == 5:
-            print(5)
+        elif leitner.last_step >= 5:
             leitner_questions = Leitner_question.objects.filter(n=-1)
 
         if leitner_questions:
             try:
                 for question in leitner_questions:
-                    print(question.n)
                     question.n += 1
                     question.save()
 
@@ -321,18 +314,22 @@ class LeitnerView(View):
         correct_answers = request.session.get("correct_answers")
         user_answers = {key: request.POST.get(key) for key in request.session.get('correct_answers', {})}
         for key in user_answers:
-            if key in correct_answers:  # Ensure the key exists in both dictionaries
+            if key in correct_answers:
 
                 value1 = user_answers[key]
                 value2 = correct_answers[key]
 
-                practice = Practice.objects.filter(subquestion__id=questions_data[key]['subquestion_id']).first()
+                practice, created = Practice.objects.get_or_create(subquestion__id=questions_data[key]['subquestion_id'])
+                practice.student.add(student)
+                practice.subquestion.add(questions_data[key]['subquestion_id'])
+                practice.save()
 
-                leitner_question = Leitner_question.objects.get(
-                    subquestion_id=questions_data[key]['subquestion_id']
-                )
+                leitner_question = Leitner_question.objects.filter(
+                    student=student,
+                    subquestion__text=questions_data[key]['subquestion_text'],
+                ).first()
 
-                leitner = Leitner.objects.filter(student=student).first()
+                leitner = Leitner.objects.get(student=student)
 
                 if value1 == value2:
                     # practice
@@ -529,7 +526,7 @@ def create_question(request):
 def edit_question(request, question_id):
     question = get_object_or_404(Question, id=question_id)
     if request.method == "POST":
-        form = QuestionForm(request.POST, request.FILES,  instance=question)
+        form = QuestionForm(request.POST, request.FILES, instance=question)
         if form.is_valid():
             form.save()
             return redirect('schoolview:designer_questions', request.user.id)
@@ -625,12 +622,13 @@ def student_leitner_questions(request, student_id):
 
     for subquestion in subquestions:
         if leitner_questions.filter(subquestion=subquestion).exists():
-            status = "موجود در لایتنر"
+            status = True  # در لایتنر موجود هست
         else:
-            status = "موجود نیست در لایتنر"
+            status = False  # در لایتنر موجود نیست
         question_status.append({
             'text': subquestion.text,
-            'status': status
+            'status': status,
+            'id': subquestion.id
         })
 
     context = {
@@ -641,25 +639,21 @@ def student_leitner_questions(request, student_id):
     return render(request, 'school/student_leitner_questions.html', context)
 
 
-def add_to_leitner(request, subquestion_id):
-    if request.user.is_student:
-        student = get_object_or_404(Student, id=request.user.id)
-    else:
-        pass
+def add_to_leitner(request, student_id, subquestion_id):
+    student = get_object_or_404(Student, id=student_id)
     subquestion = get_object_or_404(Subquestion, id=subquestion_id)
-
-    # بررسی آیا سوال قبلاً در لایتنر اضافه شده است
     if not Leitner_question.objects.filter(student=student, subquestion=subquestion).exists():
         Leitner_question.objects.create(student=student, subquestion=subquestion)
+    else:
+        return HttpResponse('this question is already in leitner')
+    return redirect('schoolview:student_leitner_questions', student_id)
 
-    return redirect('student_leitner_questions', student_id=student.id)
 
-
-def remove_from_leitner(request, subquestion_id):
-    student = get_object_or_404(Student, id=request.user.id)
+def remove_from_leitner(request, student_id, subquestion_id):
+    student = get_object_or_404(Student, id=student_id)
     subquestion = get_object_or_404(Subquestion, id=subquestion_id)
-
-    # حذف سوال از لایتنر
-    Leitner_question.objects.filter(student=student, subquestion=subquestion).delete()
-
-    return redirect('student_leitner_questions', student_id=student.id)
+    if Leitner_question.objects.filter(student=student, subquestion=subquestion).exists():
+        Leitner_question.objects.filter(student=student, subquestion=subquestion).delete()
+    else:
+        return HttpResponse('this question is already removed')
+    return redirect('schoolview:student_leitner_questions', student_id)
