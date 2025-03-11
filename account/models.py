@@ -42,6 +42,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(unique=True, max_length=20)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
+
     is_question_designer = models.BooleanField(default=False, blank=False, null=False)
     is_student = models.BooleanField(default=False, blank=False, null=False)
 

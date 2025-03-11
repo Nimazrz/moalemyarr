@@ -21,7 +21,7 @@
                 <tr>
                     <td>
                         {% for subquestion in question.subquestion.all %}
-                            {{ subquestion.text }}{% if not forloop.last %}, {% endif %}
+                            <a href="{% url 'schoolview:subquestion_view' subquestion.id %}">{{ subquestion.text }}</a>
                         {% endfor %}
                     </td>
                     <td>{{ question.date }}</td>

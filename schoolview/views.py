@@ -300,6 +300,7 @@ class LeitnerView(View):
                     "question_text": subquestion_question_title,
                     "subquestion_text": subquestion.text,
                     "subquestion_image": serialize_value(subquestion.image),
+                    "subquestion_time": subquestion.time,
                     "answers": [{"text": ans.title, "is_correct": ans == correct_answer} for ans in all_answers]
                 }
                 self.correct_answers[key] = correct_answer.title
@@ -313,13 +314,20 @@ class LeitnerView(View):
         questions_data = request.session.get("questions_data")
         correct_answers = request.session.get("correct_answers")
         user_answers = {key: request.POST.get(key) for key in request.session.get('correct_answers', {})}
+        subquestion_times = 0
+        for key, value in questions_data.items():
+            subquestion_times += questions_data[key]['subquestion_time']
+
+        leitner = Leitner.objects.get(student=student)
+
         for key in user_answers:
             if key in correct_answers:
 
                 value1 = user_answers[key]
                 value2 = correct_answers[key]
 
-                practice, created = Practice.objects.get_or_create(subquestion__id=questions_data[key]['subquestion_id'])
+                practice, created = Practice.objects.get_or_create(
+                    subquestion__id=questions_data[key]['subquestion_id'])
                 practice.student.add(student)
                 practice.subquestion.add(questions_data[key]['subquestion_id'])
                 practice.save()
@@ -328,8 +336,6 @@ class LeitnerView(View):
                     student=student,
                     subquestion__text=questions_data[key]['subquestion_text'],
                 ).first()
-
-                leitner = Leitner.objects.get(student=student)
 
                 if value1 == value2:
                     # practice
@@ -343,9 +349,6 @@ class LeitnerView(View):
                     leitner_question.datelq = date.today()
                     leitner_question.save()
 
-                    leitner.last_step += 1
-                    leitner.datel = date.today()
-                    leitner.save()
 
 
                 else:
@@ -360,12 +363,15 @@ class LeitnerView(View):
                     leitner_question.datelq = date.today()
                     leitner_question.save()
 
-                    leitner.last_step += 1
-                    leitner.datel = date.today()
-                    leitner.save()
-
         self.upgrade_subquestions(student)
 
+        leitner.last_step += 1
+        leitner.datel = date.today()
+        leitner.save()
+
+        worksheet, created = Question_practice_worksheet.objects.get_or_create(student=student, date=date.today())
+        worksheet.total_time += subquestion_times
+        worksheet.save()
         return redirect('schoolview:leitner')
 
 
@@ -657,3 +663,8 @@ def remove_from_leitner(request, student_id, subquestion_id):
     else:
         return HttpResponse('this question is already removed')
     return redirect('schoolview:student_leitner_questions', student_id)
+
+
+def subquestion_view(request,  subquestion_id):
+    subquestion = get_object_or_404(Subquestion, id=subquestion_id)
+    return render(request, 'school/subquestion_view.html', {'subquestion': subquestion})

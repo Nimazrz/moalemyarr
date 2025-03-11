@@ -1,0 +1,63 @@
+{% extends 'parent/base.html' %}
+{% load teacher_tags %}
+{% load static %}
+{% block title %}جزئیات سوال{% endblock %}
+{% block content %}
+<div class="question-details-container">
+    <h1 class="question-details-title">جزئیات سوال</h1>
+
+    <!-- Question Details -->
+    <div class="question-section">
+            <h2 class="section-title">صورت سوال:</h2>
+            {% if subquestion.question  %}
+            <p class="question-text">{{ subquestion.question }}</p>
+            {% else %}
+            <p class="question-text">ندارد</p>
+        {% endif %}
+    </div>
+
+    <div class="question-section">
+        <h2 class="section-title">سوال:</h2>
+        <p class="question-text">{{ subquestion.text }}</p>
+        {% if subquestion.image %}
+            <img src="{{ subquestion.image.url}}" alt="تصویر سوال" class="question-image">
+        {% endif %}
+    </div>
+
+    <!-- Correct Answers -->
+    <div class="answer-section">
+        <h2 class="section-title">پاسخ‌های درست:</h2>
+        {% for right_answer in subquestion.right_answer.all %}
+            <div class="answer-item">
+                <p class="answer-text">{{ right_answer.title }}</p>
+                {% if right_answer.image %}
+                    <img src="{{ right_answer.image.url }}" alt="تصویر پاسخ درست" class="answer-image">
+                {% endif %}
+            </div>
+        {% empty %}
+            <p class="no-answer">پاسخ درستی ثبت نشده است.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Wrong Answers -->
+    <div class="answer-section">
+        <h2 class="section-title">پاسخ‌های نادرست:</h2>
+        {% for wrong_answer in subquestion.wrong_answer.all %}
+            <div class="answer-item">
+                <p class="answer-text">{{ wrong_answer.title }}</p>
+                {% if wrong_answer.image %}
+                    <img src="{{ wrong_answer.image.url }}" alt="تصویر پاسخ نادرست" class="answer-image">
+                {% endif %}
+            </div>
+        {% empty %}
+            <p class="no-answer">پاسخ نادرستی ثبت نشده است.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Question Designer -->
+    <div class="designer-section">
+        <h2 class="section-title">نویسنده‌ی سوال:</h2>
+        <p class="designer-name">{{ subquestion.question_designer.designer.username }}</p>
+    </div>
+</div>
+{% endblock %}

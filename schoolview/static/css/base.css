@@ -1128,3 +1128,122 @@ form input[type="submit"]:active {
         text-align: center;
     }
 }
+
+a {
+    text-decoration: none;
+    color: #000000;
+
+}
+/* General container for question details */
+.question-details-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Title styling */
+.question-details-title {
+    font-size: 28px;
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Section titles */
+.section-title {
+    font-size: 24px;
+    color: #007bff;
+    margin-top: 20px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 5px;
+}
+
+/* Question text styling */
+.question-text {
+    font-size: 18px;
+    color: #555;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+/* Question image styling */
+.question-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+/* Answer section styling */
+.answer-section {
+    margin-bottom: 20px;
+}
+
+.answer-item {
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+}
+
+.answer-text {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.answer-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+/* No answer text styling */
+.no-answer {
+    font-size: 16px;
+    color: #777;
+    font-style: italic;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px dashed #e0e0e0;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Designer section styling */
+.designer-section {
+    margin-top: 20px;
+}
+
+.designer-name {
+    font-size: 18px;
+    color: #333;
+    font-weight: bold;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .question-details-container {
+        padding: 15px;
+    }
+
+    .question-details-title {
+        font-size: 24px;
+    }
+
+    .section-title {
+        font-size: 20px;
+    }
+
+    .question-text, .answer-text, .designer-name {
+        font-size: 16px;
+    }
+}
+      /*------------------------------------------------*/
+

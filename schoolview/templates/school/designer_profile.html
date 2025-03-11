@@ -4,10 +4,12 @@
 {% block content %}
     <div class="designer-dashboard">
         <div class="profile-header">
+            <a href="{% url 'schoolview:edit_profile' %}">
             {% if designer.designer.profile %}
-               <a href="{% url 'schoolview:edit_profile' %}"> <img src="{{ designer.designer.profile.url }}" alt="photo" class="rounded-image"></a>
+                <img src="{{ designer.designer.profile.url }}" alt="photo" class="rounded-image">
             {% endif %}
             <h1>Hello {{ user.username }}</h1>
+            </a>
         </div>
 
 

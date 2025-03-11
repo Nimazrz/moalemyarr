@@ -4,7 +4,7 @@ from django.contrib.auth import views as auth_views
 app_name = 'schoolview'
 
 urlpatterns = [
-    #registrations
+    # registrations
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', views.logged_out, name='logout'),
     path('register/', views.register, name='register'),
@@ -17,7 +17,7 @@ urlpatterns = [
     path('student_profile/<int:user_id>/', views.student_profile, name='student_profile'),
     path('designer_profile/<int:user_id>/', views.designer_profile, name='designer_profile'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
-    path('profile/<int:user_id>/questions/', views.questions, name='questions'),
+    path('student_profile/<int:user_id>/questions/', views.questions, name='questions'),
     path('profile/subquestion_list/', views.subquestion_create_view, name='subquestion_list'),
     path('profile/right-answer/create/<int:subquestion_id>/', views.right_answer_create_view, name='right_answer_create'),
     path('profile/wrong-answer/create/<int:subquestion_id>/', views.wrong_answer_create_view, name='wrong_answer_create'),
@@ -33,4 +33,5 @@ urlpatterns = [
     path('student_profile/<int:student_id>/leitner_questions', views.student_leitner_questions, name='student_leitner_questions'),
     path('student_profile/<int:student_id>/leitner_questions/<int:subquestion_id>/add/', views.add_to_leitner, name='add_to_leitner'),
     path('student_profile/<int:student_id>/leitner_questions/<int:subquestion_id>/remove/', views.remove_from_leitner, name='remove_from_leitner'),
+    path('subquestion_view/<int:subquestion_id>/', views.subquestion_view, name='subquestion_view'),
 ]

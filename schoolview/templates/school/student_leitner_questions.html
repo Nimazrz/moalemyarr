@@ -14,7 +14,7 @@
         <tbody>
             {% for question in question_status %}
                 <tr>
-                    <td>{{ question.text }}</td>
+                    <td><a href="{% url 'schoolview:subquestion_view' question.id %}">{{ question.text }}</a></td>
                     {% if question.status %}
                         <td>موجود در لایتنر</td>
                         <td><a href="{% url 'schoolview:remove_from_leitner' student.id question.id %}">حذف از لایتنر</a></td>

@@ -5,10 +5,12 @@
 {% block content %}
 <div class="profile-container">
     <div class="profile-header">
-        {% if student.student.profile %}
-            <a href="{% url 'schoolview:edit_profile' %}"><img src="{{ student.student.profile.url }}" alt="photo" class="rounded-image"></a>
-        {% endif %}
-        <h1>Hello {{ user.username }}</h1>
+        <a href="{% url 'schoolview:edit_profile' %}">
+            {% if student.student.profile %}
+                <img src="{{ student.student.profile.url }}" alt="photo" class="rounded-image">
+            {% endif %}
+            <h1>Hello {{ user.username }}</h1>
+        </a>
     </div>
 
     <div class="leitner-section">
@@ -24,7 +26,9 @@
 
     <div class="exam-section">
         <a href="{% url 'schoolview:exam' %}" class="exam-button">exam</a>
-        <a href="{% url 'schoolview:questions' user.id %}" class="exam-button">سوالات</a>
+        <a href="{% url 'schoolview:questions' user.id %}" class="exam-button">وضعیت من در سوال ها</a>
+        <a href="{% url 'schoolview:student_leitner_questions' student.id %}" class="exam-button">سوالات لایتنر</a>
+
     </div>
 
     <h3>تمرین های روز</h3>
@@ -52,5 +56,4 @@
         <a href="{% url 'schoolview:logout' %}" class="logout-button">Logout</a>
     </div>
 </div>
-<a href="{% url 'schoolview:student_leitner_questions' student.id %}">سوالات لایتنر</a>
 {% endblock %}
