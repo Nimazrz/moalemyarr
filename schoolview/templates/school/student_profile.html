@@ -14,14 +14,17 @@
     </div>
 
     <div class="leitner-section">
-        {% if leitner.datel != current_date %}
+    {% if leitner_question %}
+        {% if leitner.datel != current_date or leitner.last_step != 1 %}
                 <div class="exam-section">
                     <a href="{% url 'schoolview:leitner' %}" class="leitner-button">Do Leitner</a>
-
-                 </div>
+                </div>
         {% else %}
             <p class="leitner-message">You did your Leitner for today!</p>
         {% endif %}
+    {% else %}
+        <p class="leitner-message">you have not added any question in leitner questions</p>
+    {% endif %}
     </div>
 
     <div class="exam-section">

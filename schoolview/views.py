@@ -264,7 +264,7 @@ class LeitnerView(View):
 
         # find student  personal leitner
         if leitner.last_step == 1 and leitner.datel == date.today():
-            return HttpResponse({"error": "you have done your letner for today"}, status=404)
+            return HttpResponse({"you have done your leitner for today"}, status=404)
 
         numbers = (30, 14, 6, 2, 0)
         if leitner.last_step > 5:
