@@ -488,27 +488,40 @@ def wrong_answer_create_view(request, subquestion_id):
 def create_full_hierarchy_view(request):
     question_designer = get_object_or_404(Question_designer, designer=request.user)
 
+    # گرفتن داده‌های موجود برای نمایش در فرم
+    courses = Course.objects.filter(designer=question_designer)
+    books = Book.objects.filter(course__in=courses)
+    seasons = Season.objects.filter(book__in=books)
+    lessons = Lesson.objects.filter(season__in=seasons)
+    subjects = Subject.objects.filter(lesson__in=lessons)
+
     if request.method == "POST":
-        # مقادیر را از request.POST دریافت می‌کنیم
-        course_name = request.POST.get("course_name")
-        book_name = request.POST.get("book_name")
-        season_name = request.POST.get("season_name")
-        lesson_name = request.POST.get("lesson_name")
-        subject_name = request.POST.get("subject_name")
+        course_name = request.POST.get("course_name", "").strip()
+        book_name = request.POST.get("book_name", "").strip()
+        season_name = request.POST.get("season_name", "").strip()
+        lesson_name = request.POST.get("lesson_name", "").strip()
+        subject_name = request.POST.get("subject_name", "").strip()
 
-        course = Course.objects.create(name=course_name, designer=question_designer)
+        course_obj, _ = Course.objects.get_or_create(name=course_name, designer=question_designer)
 
-        book = Book.objects.create(name=book_name, course=course)
+        book_obj, _ = Book.objects.get_or_create(name=book_name, course=course_obj)
 
-        season = Season.objects.create(name=season_name, book=book)
+        season_obj, _ = Season.objects.get_or_create(name=season_name, book=book_obj)
 
-        lesson = Lesson.objects.create(name=lesson_name, season=season)
+        lesson_obj, _ = Lesson.objects.get_or_create(name=lesson_name, season=season_obj)
 
-        Subject.objects.create(name=subject_name, lesson=lesson)
+        Subject.objects.create(name=subject_name, lesson=lesson_obj)
 
         return redirect('schoolview:designer_profile', request.user.id)
 
-    return render(request, 'forms/create_full_hierarchy.html')
+    context = {
+        'courses': courses,
+        'books': books,
+        'seasons': seasons,
+        'lessons': lessons,
+        'subjects': subjects,
+    }
+    return render(request, 'forms/create_full_hierarchy.html', context)
 
 
 def designer_questions(request, user_id):
@@ -665,6 +678,6 @@ def remove_from_leitner(request, student_id, subquestion_id):
     return redirect('schoolview:student_leitner_questions', student_id)
 
 
-def subquestion_view(request,  subquestion_id):
+def subquestion_view(request, subquestion_id):
     subquestion = get_object_or_404(Subquestion, id=subquestion_id)
     return render(request, 'school/subquestion_view.html', {'subquestion': subquestion})

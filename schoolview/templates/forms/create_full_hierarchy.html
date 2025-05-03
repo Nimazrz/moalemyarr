@@ -8,19 +8,44 @@
     {% csrf_token %}
 
     <label for="id_course_name">دوره:</label>
-    <input type="text" name="course_name" id="id_course_name">
+    <input list="courses" name="course_name" id="id_course_name">
+    <datalist id="courses">
+        {% for course in courses %}
+             <option value="{{ course }}">
+        {% endfor %}
+    </datalist>
 
     <label for="id_book_name">کتاب:</label>
-    <input type="text" name="book_name" id="id_book_name">
+    <input list="books" name="book_name" id="id_book_name">
+    <datalist id="books">
+        {% for book in books %}
+             <option value="{{ book }}">
+        {% endfor %}
+    </datalist>
 
     <label for="id_season_name">فصل:</label>
-    <input type="text" name="season_name" id="id_season_name">
+    <input list="seasons" name="season_name" id="id_season_name">
+    <datalist id="seasons">
+        {% for season in seasons %}
+        	<option value="{{ season }}">
+        {% endfor %}
+    </datalist>
 
     <label for="id_lesson_name">درس:</label>
-    <input type="text" name="lesson_name" id="id_lesson_name">
+    <input list="lessons" name="lesson_name" id="id_lesson_name">
+    <datalist id="lessons">
+        {% for lesson in lessons %}
+        	<option value="{{ lesson }}">
+        {% endfor %}
+    </datalist>
 
     <label for="id_subject_name">موضوع:</label>
-    <input type="text" name="subject_name" id="id_subject_name">
+    <input list="subjects" name="subject_name" id="id_subject_name">
+    <datalist id="subjects">
+        {% for subject in subjects %}
+        	<option value="{{ subject }}">
+        {% endfor %}
+    </datalist>
 
     <button type="submit">ثبت</button>
 </form>
