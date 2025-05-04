@@ -11,7 +11,7 @@
     <input list="courses" name="course_name" id="id_course_name">
     <datalist id="courses">
         {% for course in courses %}
-             <option value="{{ course }}">
+            <option value="{{ course.name }}" data-id="{{ course.id }}">{{ course }}</option>
         {% endfor %}
     </datalist>
 
@@ -19,7 +19,7 @@
     <input list="books" name="book_name" id="id_book_name">
     <datalist id="books">
         {% for book in books %}
-             <option value="{{ book }}">
+            <option value="{{ book.name }}" data-id="{{ book.id }}">{{ book }}</option>
         {% endfor %}
     </datalist>
 
@@ -27,7 +27,8 @@
     <input list="seasons" name="season_name" id="id_season_name">
     <datalist id="seasons">
         {% for season in seasons %}
-        	<option value="{{ season }}">
+        	<option value="{{ season.name }}" data-id="{{ season.id }}">{{ season }}</option>
+
         {% endfor %}
     </datalist>
 
@@ -35,7 +36,7 @@
     <input list="lessons" name="lesson_name" id="id_lesson_name">
     <datalist id="lessons">
         {% for lesson in lessons %}
-        	<option value="{{ lesson }}">
+        	<option value="{{ lesson.name }}" data-id="{{ lesson.id }}">{{ lesson }}</option>
         {% endfor %}
     </datalist>
 
@@ -43,11 +44,49 @@
     <input list="subjects" name="subject_name" id="id_subject_name">
     <datalist id="subjects">
         {% for subject in subjects %}
-        	<option value="{{ subject }}">
+        	<option value="{{ subject.name }}" label="{{ subject }}">
         {% endfor %}
     </datalist>
 
     <button type="submit">ثبت</button>
 </form>
 
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        function setupDynamicDatalist(inputId, datalistId, type) {
+            const input = document.getElementById(inputId);
+            const datalist = document.getElementById(datalistId);
+
+            input.addEventListener("input", function () {
+                const inputValue = input.value;
+                const option = Array.from(datalist.options).find(opt => opt.value === inputValue);
+                const selectedId = option ? option.dataset.id : null;
+
+                // اگر چیزی پیدا نشد، لیست بعدی رو خالی کن
+                if (!selectedId) {
+                    datalist.innerHTML = "";
+                    return;
+                }
+
+                fetch(`/ajax/fetch_hierarchy/?type=${type}&name=${encodeURIComponent(selectedId)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        datalist.innerHTML = "";
+                        data.result.forEach(item => {
+                            const option = document.createElement("option");
+                            option.value = item.label;
+                            option.dataset.id = item.value;
+                            datalist.appendChild(option);
+                        });
+                    });
+            });
+        }
+
+        setupDynamicDatalist("id_course_name", "books", "book");
+        setupDynamicDatalist("id_book_name", "seasons", "season");
+        setupDynamicDatalist("id_season_name", "lessons", "lesson");
+        setupDynamicDatalist("id_lesson_name", "subjects", "subject");
+    });
+</script>
 {% endblock %}

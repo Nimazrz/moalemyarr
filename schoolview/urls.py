@@ -34,4 +34,6 @@ urlpatterns = [
     path('student_profile/<int:student_id>/leitner_questions/<int:subquestion_id>/add/', views.add_to_leitner, name='add_to_leitner'),
     path('student_profile/<int:student_id>/leitner_questions/<int:subquestion_id>/remove/', views.remove_from_leitner, name='remove_from_leitner'),
     path('subquestion_view/<int:subquestion_id>/', views.subquestion_view, name='subquestion_view'),
+    path('ajax/hierarchy-fetch/', views.ajax_hierarchy_fetch, name='ajax_hierarchy_fetch'),
+
 ]

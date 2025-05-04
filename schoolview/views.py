@@ -13,6 +13,7 @@ from django.views import View
 from django.urls import reverse_lazy
 from school.models import Subquestion, Right_answer, Wrong_answer
 from .forms import *
+from django.http import JsonResponse
 
 
 def register(request):
@@ -484,11 +485,40 @@ def wrong_answer_create_view(request, subquestion_id):
     return render(request, 'forms/wrong_answer_form.html', {'formset': formset, 'subquestion': subquestion})
 
 
+@login_required
+@login_required
+def ajax_hierarchy_fetch(request):
+    fetch_type = request.GET.get("type")
+    name = request.GET.get("name", "").strip()
+
+    result = []
+
+    try:
+        if fetch_type == "book":
+            course = Course.objects.get(id=int(name), designer__designer=request.user)
+            result = [{"value": b.id, "label": str(b)} for b in Book.objects.filter(course=course)]
+
+        elif fetch_type == "season":
+            book = Book.objects.get(id=int(name), course__designer__designer=request.user)
+            result = [{"value": s.id, "label": str(s)} for s in Season.objects.filter(book=book)]
+
+        elif fetch_type == "lesson":
+            season = Season.objects.get(id=int(name), book__course__designer__designer=request.user)
+            result = [{"value": l.id, "label": str(l)} for l in Lesson.objects.filter(season=season)]
+
+        elif fetch_type == "subject":
+            lesson = Lesson.objects.get(id=int(name), season__book__course__designer__designer=request.user)
+            result = [{"value": s.id, "label": str(s)} for s in Subject.objects.filter(lesson=lesson)]
+    except Exception:
+        result = []
+
+    return JsonResponse({"result": result})
+
+
 @login_required(login_url='/login/')
 def create_full_hierarchy_view(request):
     question_designer = get_object_or_404(Question_designer, designer=request.user)
 
-    # گرفتن داده‌های موجود برای نمایش در فرم
     courses = Course.objects.filter(designer=question_designer)
     books = Book.objects.filter(course__in=courses)
     seasons = Season.objects.filter(book__in=books)
