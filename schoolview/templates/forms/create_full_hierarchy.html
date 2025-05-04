@@ -11,7 +11,7 @@
     <input list="courses" name="course_name" id="id_course_name">
     <datalist id="courses">
         {% for course in courses %}
-             <option value="{{ course.name }}" label="{{ course }}">
+            <option value="{{ course.name }}" label="{{ course }}">
         {% endfor %}
     </datalist>
 
@@ -56,7 +56,7 @@
             const input = document.getElementById(inputId);
             const datalist = document.getElementById(datalistId);
 
-            input.addEventListener("input", function () {
+            input.addEventListener("change", function () {
                 const value = input.value;
 
                 fetch(`/ajax/fetch_hierarchy/?type=${type}&name=${encodeURIComponent(value)}`)
@@ -65,8 +65,8 @@
                         datalist.innerHTML = "";
                         data.result.forEach(item => {
                             const option = document.createElement("option");
-                            option.value = item.value;               // مقدار name
-                            option.textContent = item.label;         // نمایش __str__
+                            option.value = item.value;
+                            option.textContent = item.label;
                             datalist.appendChild(option);
                         });
                     });

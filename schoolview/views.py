@@ -489,25 +489,29 @@ def wrong_answer_create_view(request, subquestion_id):
 def ajax_hierarchy_fetch(request):
     fetch_type = request.GET.get("type")
     name = request.GET.get("name", "").strip()
-
     result = []
 
     try:
         if fetch_type == "book":
-            course = Course.objects.get(name=name, designer__designer=request.user)
-            result = [{"value": b.name, "label": str(b)} for b in Book.objects.filter(course=course)]
+            course = Course.objects.filter(name=name, designer__designer=request.user).first()
+            if course:
+                result = [{"value": b.name, "label": str(b)} for b in Book.objects.filter(course=course)]
 
         elif fetch_type == "season":
-            book = Book.objects.get(name=name, course__designer__designer=request.user)
-            result = [{"value": s.name, "label": str(s)} for s in Season.objects.filter(book=book)]
+            book = Book.objects.filter(name=name, course__designer__designer=request.user).first()
+            if book:
+                result = [{"value": s.name, "label": str(s)} for s in Season.objects.filter(book=book)]
 
         elif fetch_type == "lesson":
-            season = Season.objects.get(name=name, book__course__designer__designer=request.user)
-            result = [{"value": l.name, "label": str(l)} for l in Lesson.objects.filter(season=season)]
+            season = Season.objects.filter(name=name, book__course__designer__designer=request.user).first()
+            if season:
+                result = [{"value": l.name, "label": str(l)} for l in Lesson.objects.filter(season=season)]
 
         elif fetch_type == "subject":
-            lesson = Lesson.objects.get(name=name, season__book__course__designer__designer=request.user)
-            result = [{"value": s.name, "label": str(s)} for s in Subject.objects.filter(lesson=lesson)]
+            lesson = Lesson.objects.filter(name=name, season__book__course__designer__designer=request.user).first()
+            if lesson:
+                result = [{"value": s.name, "label": str(s)} for s in Subject.objects.filter(lesson=lesson)]
+
     except Exception:
         result = []
 
@@ -519,6 +523,7 @@ def create_full_hierarchy_view(request):
     question_designer = get_object_or_404(Question_designer, designer=request.user)
 
     courses = Course.objects.filter(designer=question_designer)
+
     books = Book.objects.filter(course__in=courses)
     seasons = Season.objects.filter(book__in=books)
     lessons = Lesson.objects.filter(season__in=seasons)
