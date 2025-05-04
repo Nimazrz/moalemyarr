@@ -11,7 +11,7 @@
     <input list="courses" name="course_name" id="id_course_name">
     <datalist id="courses">
         {% for course in courses %}
-            <option value="{{ course.name }}" data-id="{{ course.id }}">{{ course }}</option>
+             <option value="{{ course.name }}" label="{{ course }}">
         {% endfor %}
     </datalist>
 
@@ -19,7 +19,7 @@
     <input list="books" name="book_name" id="id_book_name">
     <datalist id="books">
         {% for book in books %}
-            <option value="{{ book.name }}" data-id="{{ book.id }}">{{ book }}</option>
+             <option value="{{ book.name }}" label="{{ book }}">
         {% endfor %}
     </datalist>
 
@@ -27,8 +27,7 @@
     <input list="seasons" name="season_name" id="id_season_name">
     <datalist id="seasons">
         {% for season in seasons %}
-        	<option value="{{ season.name }}" data-id="{{ season.id }}">{{ season }}</option>
-
+        	<option value="{{ season.name }}" label="{{ season }}">
         {% endfor %}
     </datalist>
 
@@ -36,7 +35,7 @@
     <input list="lessons" name="lesson_name" id="id_lesson_name">
     <datalist id="lessons">
         {% for lesson in lessons %}
-        	<option value="{{ lesson.name }}" data-id="{{ lesson.id }}">{{ lesson }}</option>
+        	<option value="{{ lesson.name }}" label="{{ lesson }}">
         {% endfor %}
     </datalist>
 
@@ -51,7 +50,6 @@
     <button type="submit">ثبت</button>
 </form>
 
-
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         function setupDynamicDatalist(inputId, datalistId, type) {
@@ -59,24 +57,16 @@
             const datalist = document.getElementById(datalistId);
 
             input.addEventListener("input", function () {
-                const inputValue = input.value;
-                const option = Array.from(datalist.options).find(opt => opt.value === inputValue);
-                const selectedId = option ? option.dataset.id : null;
+                const value = input.value;
 
-                // اگر چیزی پیدا نشد، لیست بعدی رو خالی کن
-                if (!selectedId) {
-                    datalist.innerHTML = "";
-                    return;
-                }
-
-                fetch(`/ajax/fetch_hierarchy/?type=${type}&name=${encodeURIComponent(selectedId)}`)
+                fetch(`/ajax/fetch_hierarchy/?type=${type}&name=${encodeURIComponent(value)}`)
                     .then(response => response.json())
                     .then(data => {
                         datalist.innerHTML = "";
                         data.result.forEach(item => {
                             const option = document.createElement("option");
-                            option.value = item.label;
-                            option.dataset.id = item.value;
+                            option.value = item.value;               // مقدار name
+                            option.textContent = item.label;         // نمایش __str__
                             datalist.appendChild(option);
                         });
                     });

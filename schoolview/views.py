@@ -486,7 +486,6 @@ def wrong_answer_create_view(request, subquestion_id):
 
 
 @login_required
-@login_required
 def ajax_hierarchy_fetch(request):
     fetch_type = request.GET.get("type")
     name = request.GET.get("name", "").strip()
@@ -495,20 +494,20 @@ def ajax_hierarchy_fetch(request):
 
     try:
         if fetch_type == "book":
-            course = Course.objects.get(id=int(name), designer__designer=request.user)
-            result = [{"value": b.id, "label": str(b)} for b in Book.objects.filter(course=course)]
+            course = Course.objects.get(name=name, designer__designer=request.user)
+            result = [{"value": b.name, "label": str(b)} for b in Book.objects.filter(course=course)]
 
         elif fetch_type == "season":
-            book = Book.objects.get(id=int(name), course__designer__designer=request.user)
-            result = [{"value": s.id, "label": str(s)} for s in Season.objects.filter(book=book)]
+            book = Book.objects.get(name=name, course__designer__designer=request.user)
+            result = [{"value": s.name, "label": str(s)} for s in Season.objects.filter(book=book)]
 
         elif fetch_type == "lesson":
-            season = Season.objects.get(id=int(name), book__course__designer__designer=request.user)
-            result = [{"value": l.id, "label": str(l)} for l in Lesson.objects.filter(season=season)]
+            season = Season.objects.get(name=name, book__course__designer__designer=request.user)
+            result = [{"value": l.name, "label": str(l)} for l in Lesson.objects.filter(season=season)]
 
         elif fetch_type == "subject":
-            lesson = Lesson.objects.get(id=int(name), season__book__course__designer__designer=request.user)
-            result = [{"value": s.id, "label": str(s)} for s in Subject.objects.filter(lesson=lesson)]
+            lesson = Lesson.objects.get(name=name, season__book__course__designer__designer=request.user)
+            result = [{"value": s.name, "label": str(s)} for s in Subject.objects.filter(lesson=lesson)]
     except Exception:
         result = []
 
