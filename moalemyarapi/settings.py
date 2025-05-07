@@ -99,22 +99,22 @@ WSGI_APPLICATION = 'moalemyarapi.wsgi.application'
 
 load_dotenv()
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER',),
-        'PASSWORD': os.getenv('DB_PASSWORD',),
-        'HOST': os.getenv('DB_HOST','localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-    }
-}
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv('DB_NAME'),
+#         'USER': os.getenv('DB_USER',),
+#         'PASSWORD': os.getenv('DB_PASSWORD',),
+#         'HOST': os.getenv('DB_HOST','localhost'),
+#         'PORT': os.getenv('DB_PORT', '5432'),
 #     }
 # }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 
 # Password validation
@@ -181,6 +181,8 @@ REST_FRAMEWORK = {
 
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-# SESSION_COOKIE_AGE = 86400  # 1 روز
-# SESSION_SAVE_EVERY_REQUEST = True  # هر درخواست، سشن را ذخیره کند
-# SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+# celery configs
+CELERY_BROKER_URL = 'redis://localhost:6379/0' 
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+

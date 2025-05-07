@@ -14,6 +14,8 @@ from django.urls import reverse_lazy
 from school.models import Subquestion, Right_answer, Wrong_answer
 from .forms import *
 from django.http import JsonResponse
+from .tasks import process_worksheet
+
 
 
 def register(request):
@@ -158,73 +160,17 @@ def save_worksheet(request):
     if request.method != "POST":
         return HttpResponse({"error": "Invalid request method"}, status=405)
 
-    student = Student.objects.filter(student=request.user).first()
-    if not student:
-        return HttpResponse({"error": "Student profile not found"}, status=404)
-
+    user = request.user
     exam_data = request.session.get('exam_data', {})
     questions_data = request.session.get('questions_data', {})
     correct_answered = request.session.get('correct_answered', {})
 
-    for key, value in questions_data.items():
-        subquestion = Subquestion.objects.get(id=value['subquestion_id'])
-        correct_answers_from_db = set(
-            Right_answer.objects.filter(subquestion=subquestion).values_list('title', flat=True))
-        existing_practice = Practice.objects.filter(subquestion=subquestion).first()
+    process_worksheet.delay(user.id, exam_data, questions_data, correct_answered)
 
-        # practice
-        if not existing_practice:
-            nt = nf = zero = 0
-            try:
-                if correct_answered[key] in correct_answers_from_db:
-                    nt += 1
-                    zero = 0
-
-            except KeyError:
-                nf += 1
-                zero += 1
-
-            new_practice = Practice.objects.create(
-                zero=zero,
-                nf=nf,
-                nt=nt,
-                date=date.today()
-            )
-            new_practice.student.add(student)
-            new_practice.subquestion.add(subquestion)
-            new_practice.save()
-        else:
-            try:
-                # Extract the user's answer from correct_answered
-                user_answer = correct_answered[key]["user_answer"]
-                if user_answer in correct_answers_from_db:
-                    existing_practice.nt += 1
-                    existing_practice.zero = 0
-                    existing_practice.date = date.today()
-                    existing_practice.save()
-            except KeyError:
-                existing_practice.nf += 1
-                existing_practice.zero += 1
-                existing_practice.date = date.today()
-                existing_practice.save()
-
-    # worksheet
-    worksheet, created = Question_practice_worksheet.objects.get_or_create(
-        student=student, date=date.today(), defaults={"total_time": 0, "time_spent": 0}
-    )
-
-    worksheet.total_time += exam_data.get('total_time', 0)
-    worksheet.time_spent += 20
-    worksheet.save()
-    request.session.pop('exam_data', None)
-    request.session.pop('questions_data', None)
-    request.session.pop('correct_answers', None)
-    request.session.pop('user_answers', None)
-    request.session.pop('wrong_answered', None)
-    request.session.pop('correct_answered', None)
+    for key in ['exam_data', 'questions_data', 'correct_answers', 'user_answers', 'wrong_answered', 'correct_answered']:
+        request.session.pop(key, None)
 
     return redirect('schoolview:student_profile', request.user.id)
-
 
 class LeitnerView(View):
     def __init__(self):

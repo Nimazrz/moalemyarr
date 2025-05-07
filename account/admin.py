@@ -68,7 +68,7 @@ class QuestionDesignerAdmin(admin.ModelAdmin):
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('student',)
+    list_display = ('student', )
     search_fields = ('student__code_meli', 'student__username', 'student__first_name', 'student__last_name')
     list_filter = ('student__is_active',)
     # exclude = ('user',)

@@ -8,4 +8,3 @@
 # def update_leitner_question(sender, instance, **kwargs):
 #     if instance.n == -1:
 #         Leitner_question.objects.update(n=0)
-#
