@@ -21,6 +21,7 @@ urlpatterns = [
     path("logout/", views.LogoutAPIView.as_view(), name="logout"),
     path('api_token_auth/', obtain_auth_token, name='api_token_auth'),
 
+    path('filter_exam/', views.get_exam_filter, name='filter_exam'),
     path('exam/', views.get_exam, name='get_exam'),
     path('leitner/', views.LeitnerAPIView.as_view(), name='leitner'),
 

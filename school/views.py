@@ -21,6 +21,7 @@ from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from rest_framework.authtoken.models import Token
 import json
+from django.core.cache import cache 
 
 
 # Create your views here.
@@ -105,12 +106,64 @@ class SubjectViewSet(viewsets.ModelViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
 
+@permission_classes([IsAuthenticated])
+@api_view(['GET', 'POST'])
+def get_exam_filter(request: Request):
+    courses = Course.objects.all()
+    books = Book.objects.all()
+    seasons = Season.objects.all()
+    lessons = Lesson.objects.all()
+    subjects = Subject.objects.all()
+
+    if request.methods == 'GET':
+
+        courses_serializer = CourseSerializer(courses, many=True)
+        books_serializer = BookSerializer(books, many=True)
+        seasons_serializer = SeasonSerializer(seasons, many=True)
+        lessons_serializer = LessonSerializer(lessons, many=True)
+        subjects_serializer = SubjectSerializer(subjects, many=True)
+
+        return Response({
+            'courses': courses_serializer.data,
+            'books': books_serializer.data,
+            'seasons': seasons_serializer.data,
+            'lessons': lessons_serializer.data,
+            'subjects': subjects_serializer.data,
+        }, status=status.HTTP_200_OK)
+
+    # if request.method == 'POST':
+        
+    #     course_ids = request.data.get('course_ids', [])
+    #     book_ids = request.data.get('book_ids', [])
+    #     season_ids = request.data.get('season_ids', [])
+    #     lesson_ids = request.data.get('lesson_ids', [])
+    #     subject_ids = request.data.get('subject_ids', [])
+        
+    #     for course in course_ids:
+    #         if not course in courses:
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+    
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def get_exam(request: Request):
     student = Student.objects.filter(student=request.user).first()
     if request.method == "GET":
+
+
         subquestions = Subquestion.objects.annotate(
             total_calculation=ExpressionWrapper(
                 (((F('practice__zero') * 2) - 1) * (F('practice__nf') + 1) / (F('practice__nt') + 1)),
@@ -275,7 +328,6 @@ class LeitnerAPIView(APIView):
         )
 
     def post(self, request):
-        print(request.data)
         """
             {
               "answers": [
