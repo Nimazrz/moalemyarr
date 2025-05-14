@@ -21,7 +21,7 @@ from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from rest_framework.authtoken.models import Token
 import json
-from django.core.cache import cache 
+from django.core.cache import cache
 
 
 # Create your views here.
@@ -33,8 +33,6 @@ class SignupAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 class LogoutAPIView(APIView):
@@ -106,63 +104,69 @@ class SubjectViewSet(viewsets.ModelViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
 
+
 @permission_classes([IsAuthenticated])
 @api_view(['GET', 'POST'])
 def get_exam_filter(request: Request):
-    courses = Course.objects.all()
-    books = Book.objects.all()
-    seasons = Season.objects.all()
-    lessons = Lesson.objects.all()
-    subjects = Subject.objects.all()
-
-    if request.methods == 'GET':
-
-        courses_serializer = CourseSerializer(courses, many=True)
-        books_serializer = BookSerializer(books, many=True)
-        seasons_serializer = SeasonSerializer(seasons, many=True)
-        lessons_serializer = LessonSerializer(lessons, many=True)
-        subjects_serializer = SubjectSerializer(subjects, many=True)
-
+    if request.method == 'GET':
         return Response({
-            'courses': courses_serializer.data,
-            'books': books_serializer.data,
-            'seasons': seasons_serializer.data,
-            'lessons': lessons_serializer.data,
-            'subjects': subjects_serializer.data,
+            'courses': CourseSerializer(Course.objects.all(), many=True).data,
+            'books': BookSerializer(Book.objects.all(), many=True).data,
+            'seasons': SeasonSerializer(Season.objects.all(), many=True).data,
+            'lessons': LessonSerializer(Lesson.objects.all(), many=True).data,
+            'subjects': SubjectSerializer(Subject.objects.all(), many=True).data,
         }, status=status.HTTP_200_OK)
 
-    # if request.method == 'POST':
-        
-    #     course_ids = request.data.get('course_ids', [])
-    #     book_ids = request.data.get('book_ids', [])
-    #     season_ids = request.data.get('season_ids', [])
-    #     lesson_ids = request.data.get('lesson_ids', [])
-    #     subject_ids = request.data.get('subject_ids', [])
-        
-    #     for course in course_ids:
-    #         if not course in courses:
+    elif request.method == 'POST':
+        course_ids = request.data.get('course_ids', [])
+        book_ids = request.data.get('book_ids', [])
+        season_ids = request.data.get('season_ids', [])
+        lesson_ids = request.data.get('lesson_ids', [])
+        subject_ids = request.data.get('subject_ids', [])
 
+        courses = Course.objects.filter(id__in=course_ids)
+        books = Book.objects.filter(id__in=book_ids)
+        seasons = Season.objects.filter(id__in=season_ids)
+        lessons = Lesson.objects.filter(id__in=lesson_ids)
+        subjects = Subject.objects.filter(id__in=subject_ids)
 
+        if len(courses) != len(course_ids):
+            return Response({'error': 'Some courses not found'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(books) != len(book_ids):
+            return Response({'error': 'Some books not found'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(seasons) != len(season_ids):
+            return Response({'error': 'Some seasons not found'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(lessons) != len(lesson_ids):
+            return Response({'error': 'Some lessons not found'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(subjects) != len(subject_ids):
+            return Response({'error': 'Some subjects not found'}, status=status.HTTP_400_BAD_REQUEST)
 
+        courses_data = CourseSerializer(courses, many=True).data
+        books_data = BookSerializer(books, many=True).data
+        seasons_data = SeasonSerializer(seasons, many=True).data
+        lessons_data = LessonSerializer(lessons, many=True).data
+        subjects_data = SubjectSerializer(subjects, many=True).data
 
+        request._request.session['courses_data'] = courses_data
+        request._request.session['books_data'] = books_data
+        request._request.session['seasons_data'] = seasons_data
+        request._request.session['lessons_data'] = lessons_data
+        request._request.session['subjects_data'] = subjects_data
 
+        return Response({
+            'courses': courses_data,
+            'books': books_data,
+            'seasons': seasons_data,
+            'lessons': lessons_data,
+            'subjects': subjects_data,
+        }, status=200)
 
-        
-
-
-
-
-
-
-
-    
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def get_exam(request: Request):
     student = Student.objects.filter(student=request.user).first()
     if request.method == "GET":
-
 
         subquestions = Subquestion.objects.annotate(
             total_calculation=ExpressionWrapper(
@@ -366,7 +370,6 @@ class LeitnerAPIView(APIView):
                 'is_correct': is_correct
             })
 
-
             leitner_question = Leitner_question.objects.get(subquestion_id=subquestion_id)
 
             practice = Practice.objects.filter(subquestion__id=subquestion_id).first()
@@ -431,7 +434,7 @@ class LeitnerQuestionViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         custom_user = get_object_or_404(CustomUser, id=self.request.user.id)
         if not custom_user.is_student:
-            return Response({"message": "You are not allowed to create questions"},)
+            return Response({"message": "You are not allowed to create questions"}, )
         student = get_object_or_404(Student, student=custom_user)
         subquestion_id = request.data['subquestion']
         if Leitner_question.objects.filter(student=student, subquestion_id=subquestion_id).exists():
