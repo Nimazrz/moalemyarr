@@ -22,6 +22,9 @@ from django.middleware.csrf import get_token
 from rest_framework.authtoken.models import Token
 import json
 from django.core.cache import cache
+from django.db.models import Q
+from .tasks import process_exam_answers
+
 
 
 # Create your views here.
@@ -147,11 +150,11 @@ def get_exam_filter(request: Request):
         lessons_data = LessonSerializer(lessons, many=True).data
         subjects_data = SubjectSerializer(subjects, many=True).data
 
-        request._request.session['courses_data'] = courses_data
-        request._request.session['books_data'] = books_data
-        request._request.session['seasons_data'] = seasons_data
-        request._request.session['lessons_data'] = lessons_data
-        request._request.session['subjects_data'] = subjects_data
+        request._request.session['course_ids'] = course_ids
+        request._request.session['book_ids'] = book_ids
+        request._request.session['season_ids'] = season_ids
+        request._request.session['lesson_ids'] = lesson_ids
+        request._request.session['subject_ids'] = subject_ids
 
         return Response({
             'courses': courses_data,
@@ -165,10 +168,22 @@ def get_exam_filter(request: Request):
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def get_exam(request: Request):
+    course_ids = request.session.get('course_ids', [])
+    book_ids = request.session.get('book_ids', [])
+    season_ids = request.session.get('season_ids', [])
+    lesson_ids = request.session.get('lesson_ids', [])
+    subject_ids = request.session.get('subject_ids', [])
+
     student = Student.objects.filter(student=request.user).first()
     if request.method == "GET":
 
-        subquestions = Subquestion.objects.annotate(
+        subquestions = Subquestion.objects.filter(
+            Q(course__in=course_ids) |
+            Q(book__in=book_ids) |
+            Q(season__in=season_ids) |
+            Q(lesson__in=lesson_ids) |
+            Q(subject__in=subject_ids)
+        ).annotate(
             total_calculation=ExpressionWrapper(
                 (((F('practice__zero') * 2) - 1) * (F('practice__nf') + 1) / (F('practice__nt') + 1)),
                 output_field=IntegerField())
@@ -199,68 +214,13 @@ def get_exam(request: Request):
         user_answers = request.data.get('answers', {})
         right_answers = request.session.get('right_answers', [])
         subquestions_serializer = request.session.get('subquestions_serializer', {})
-
-        right_answers_dict = {}
-        for answer in right_answers:
-            subquestion_id = answer['subquestion_id']
-            if subquestion_id not in right_answers_dict:
-                right_answers_dict[subquestion_id] = []
-            right_answers_dict[subquestion_id].append(answer['right_answer_id'])
-
-        results = []
-        total_time_seconds = 0
-        for subquestion_id, user_answer_id in user_answers.items():
-            subquestion_id = int(subquestion_id)
-            user_answer_id = int(user_answer_id)
-
-            correct_answers_for_question = right_answers_dict.get(subquestion_id, [])
-            is_correct = user_answer_id in correct_answers_for_question
-
-            results.append({
-                'subquestion_id': subquestion_id,
-                'user_answer_id': user_answer_id,
-                'correct_answer_id': correct_answers_for_question[0] if correct_answers_for_question else None,
-                'is_correct': is_correct
-            })
-
-            practice = Practice.objects.filter(subquestion__id=subquestion_id).first()
-            if not practice:
-                if student:
-                    subquestion = Subquestion.objects.get(id=subquestion_id)
-                    practice = Practice.objects.create(
-                        zero=0,
-                        nf=0,
-                        nt=0,
-                        date=date.today()
-                    )
-                    practice.student.add(student)
-                    practice.subquestion.add(subquestion)
-
-            if is_correct:
-                practice.nt += 1
-                practice.zero = 0
-                practice.date = date.today()
-                practice.save()
-            else:
-                practice.nf += 1
-                practice.zero += 1
-                practice.date = date.today()
-                practice.save()
-
-            for subquestion in subquestions_serializer:
-                if subquestion['id'] == subquestion_id:
-                    time_str = subquestion['time']
-                    hours, minutes, seconds = map(int, time_str.split(':'))
-                    total_time_seconds += hours * 3600 + minutes * 60 + seconds
-                    break
-
-        worksheet, created = Question_practice_worksheet.objects.get_or_create(
-            student=student, date=date.today(), )
-        worksheet.time_spent += 20
-        worksheet.total_time += total_time_seconds
-        worksheet.save()
-
-        return Response({"results": results}, status=status.HTTP_200_OK)
+        task = process_exam_answers.delay(
+            request.user.id,
+            user_answers,
+            right_answers,
+            subquestions_serializer
+        )
+        return Response({"message": "Your answers are being processed."}, status=status.HTTP_202_ACCEPTED)
 
 
 class LeitnerAPIView(APIView):

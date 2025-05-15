@@ -156,10 +156,24 @@ class SubjectSerializer(serializers.ModelSerializer):
 
 class ExamSubquestionSerializer(serializers.ModelSerializer):
     answers = serializers.SerializerMethodField()
+    time = serializers.SerializerMethodField()
 
     class Meta:
         model = Subquestion
         fields = ['id', 'question_designer', 'question', 'image', 'text', 'score', 'time', 'answers']
+
+    def get_time(self, obj):
+        time_val = obj.time
+        if hasattr(time_val, 'total_seconds'):
+            total_seconds = int(time_val.total_seconds())
+        elif isinstance(time_val, int):
+            total_seconds = time_val
+        else:
+            return "00:00:00"
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+        return f"{hours:02}:{minutes:02}:{seconds:02}"
 
     def get_answers(self, obj):
         # انتخاب یک جواب درست به صورت تصادفی
