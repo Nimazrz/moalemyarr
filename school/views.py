@@ -1,33 +1,23 @@
-from django.shortcuts import redirect
-from django.contrib.auth import logout, login
+from django.contrib.auth import logout
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import BasicAuthentication
 from .serializer import *
-from rest_framework.exceptions import PermissionDenied
 from .permissions import *
 from django.shortcuts import get_object_or_404
 from .models import *
 from rest_framework.decorators import api_view, permission_classes
 from django.db.models import F, ExpressionWrapper, IntegerField
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
-from rest_framework.authtoken.models import Token
-import json
-from django.core.cache import cache
 from django.db.models import Q
 from .tasks import process_exam_answers
 
 
-
-# Create your views here.
 class SignupAPIView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = SignupSerializer(data=request.data)
@@ -144,12 +134,6 @@ def get_exam_filter(request: Request):
         if len(subjects) != len(subject_ids):
             return Response({'error': 'Some subjects not found'}, status=status.HTTP_400_BAD_REQUEST)
 
-        courses_data = CourseSerializer(courses, many=True).data
-        books_data = BookSerializer(books, many=True).data
-        seasons_data = SeasonSerializer(seasons, many=True).data
-        lessons_data = LessonSerializer(lessons, many=True).data
-        subjects_data = SubjectSerializer(subjects, many=True).data
-
         request._request.session['course_ids'] = course_ids
         request._request.session['book_ids'] = book_ids
         request._request.session['season_ids'] = season_ids
@@ -157,11 +141,7 @@ def get_exam_filter(request: Request):
         request._request.session['subject_ids'] = subject_ids
 
         return Response({
-            'courses': courses_data,
-            'books': books_data,
-            'seasons': seasons_data,
-            'lessons': lessons_data,
-            'subjects': subjects_data,
+            'message': 'your categories selected'
         }, status=200)
 
 
