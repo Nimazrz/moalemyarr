@@ -1,7 +1,6 @@
 from django.urls import path, include
 from . import views
 from rest_framework import routers
-from rest_framework.authtoken.views import obtain_auth_token
 
 router = routers.DefaultRouter()
 
@@ -19,7 +18,7 @@ app_name = "school"
 urlpatterns = [
     path("signup/", views.SignupAPIView.as_view(), name="signup"),
     path("logout/", views.LogoutAPIView.as_view(), name="logout"),
-    path('api_token_auth/', obtain_auth_token, name='api_token_auth'),
+    path('api_token_auth/', views.CustomAuthToken.as_view(), name='api_token_auth'),
 
     path('filter_exam/', views.get_exam_filter, name='filter_exam'),
     path('exam/', views.get_exam, name='get_exam'),

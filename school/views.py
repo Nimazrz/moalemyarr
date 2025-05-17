@@ -16,6 +16,25 @@ from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from django.db.models import Q
 from .tasks import process_exam_answers
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+
+
+class CustomAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data,
+                                           context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            'token': token.key,
+            'user_id': user.pk,
+            'code_meli': user.code_meli,
+            'username': user.username,
+
+
+        })
 
 
 class SignupAPIView(APIView):
@@ -29,17 +48,14 @@ class SignupAPIView(APIView):
 
 
 class LogoutAPIView(APIView):
-    """
-    {
-    "X-CSRFToken":"{% csrf_tocken %}"
-    }
-    """
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        if request.user.is_authenticated:
-            logout(request)
-            return Response({"message": "you have logged out succesfully"}, status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            request.user.auth_token.delete()
+            return Response({"message": "Successfully logged out."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CheckAuthView(APIView):
