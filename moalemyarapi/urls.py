@@ -27,6 +27,6 @@ urlpatterns = [
 
                   path('admin/', admin.site.urls),
                   path('api-auth/', include('rest_framework.urls')),  # for using multiuser in api and change users
-                  path("api/", include("school.urls", namespace="school")),
-                  path('', include("schoolview.urls", namespace="schoolview")),
+                  path("api/", include("school.urls")),
+                  path('', include("schoolview.urls")),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

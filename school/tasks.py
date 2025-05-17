@@ -2,10 +2,11 @@
 from celery import shared_task
 from datetime import date
 from .models import Subquestion, Right_answer, Practice, Question_practice_worksheet, Student
+from django.contrib.auth import get_user_model
+
 
 @shared_task
 def process_exam_answers(user_id, user_answers, right_answers, subquestions_serializer):
-    from django.contrib.auth import get_user_model
     User = get_user_model()
 
     results = []
