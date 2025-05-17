@@ -14,7 +14,7 @@ class SignupSerializer(serializers.Serializer):
     last_name = serializers.CharField(max_length=50, min_length=2, required=True)
     is_question_designer = serializers.BooleanField(required=True)
     is_student = serializers.BooleanField(required=True)
-    email = serializers.EmailField(required=False)
+    email = serializers.EmailField(required=False, allow_blank=True)
     phone = serializers.CharField(max_length=11, min_length=11, required=False)
     address = serializers.CharField(required=False)
     city = serializers.CharField(required=False)
@@ -22,7 +22,7 @@ class SignupSerializer(serializers.Serializer):
     county = serializers.CharField(required=False)
     landline_phone = serializers.CharField(required=False)
     bio = serializers.CharField(required=False)
-    profile_pic = serializers.ImageField(required=False)
+    profile_pic = serializers.ImageField(required=False, allow_null=True)
     password = serializers.CharField(write_only=True, required=True)
     password2 = serializers.CharField(write_only=True, required=True)
 
@@ -32,6 +32,16 @@ class SignupSerializer(serializers.Serializer):
         if password != password2:
             raise serializers.ValidationError({"password": "passwords must match"})
         return data
+
+    def validate_code_meli(self, value):
+        if not value.isdigit():
+            raise serializers.ValidationError("کد ملی باید فقط شامل اعداد باشد")
+        return value
+
+    def validate_phone(self, value):
+        if value and not value.isdigit():
+            raise serializers.ValidationError("شماره تلفن باید فقط شامل اعداد باشد")
+        return value
 
     def create(self, validated_data):
         validated_data["password"] = make_password(validated_data["password"])
