@@ -1,10 +1,9 @@
-from django.contrib.auth import logout
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authentication import BasicAuthentication
 from .serializer import *
 from .permissions import *
@@ -18,6 +17,7 @@ from django.db.models import Q
 from .tasks import process_exam_answers
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
+from account.models import CustomUser
 
 
 class CustomAuthToken(ObtainAuthToken):
@@ -33,14 +33,19 @@ class CustomAuthToken(ObtainAuthToken):
             'code_meli': user.code_meli,
             'username': user.username,
 
-
         })
 
 
 class SignupAPIView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
+            code_meli = serializer.validated_data.get('code_meli')
+            username = serializer.validated_data.get('username')
+            if CustomUser.objects.filter(code_meli=code_meli).exists():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:

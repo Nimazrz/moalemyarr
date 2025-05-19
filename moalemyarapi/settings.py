@@ -152,6 +152,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "frontend",
+]
+STATIC_ROOT = BASE_DIR / "static"
 
 # images
 MEDIA_URL = '/media/'
@@ -185,13 +189,16 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Your Project API',
-    'DESCRIPTION': 'Your project description',
+    'TITLE': 'TestGaam',
+    # 'DESCRIPTION': 'Your project description',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
 
+# CORS_ALLOWED_ORIGINS = [
+# 'http://localhost:3000'
+# ]
 
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'

@@ -34,8 +34,8 @@ class SignupSerializer(serializers.Serializer):
         return data
 
     def validate_code_meli(self, value):
-        if not value.isdigit():
-            raise serializers.ValidationError("کد ملی باید فقط شامل اعداد باشد")
+        if not value.isdigit() and len(value) == 10:
+            raise serializers.ValidationError("کد ملی وارد شده صحیح نیست")
         return value
 
     def validate_phone(self, value):
