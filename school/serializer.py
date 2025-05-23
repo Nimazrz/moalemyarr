@@ -15,13 +15,13 @@ class SignupSerializer(serializers.Serializer):
     is_question_designer = serializers.BooleanField(required=True)
     is_student = serializers.BooleanField(required=True)
     email = serializers.EmailField(required=False, allow_blank=True)
-    phone = serializers.CharField(max_length=11, min_length=11, required=False)
-    address = serializers.CharField(required=False)
-    city = serializers.CharField(required=False)
-    province = serializers.CharField(required=False)
-    county = serializers.CharField(required=False)
-    landline_phone = serializers.CharField(required=False)
-    bio = serializers.CharField(required=False)
+    phone = serializers.CharField(max_length=11, min_length=11, required=False, allow_blank=True)
+    address = serializers.CharField(required=False, allow_blank=True)
+    city = serializers.CharField(required=False, allow_blank=True)
+    province = serializers.CharField(required=False, allow_blank=True)
+    county = serializers.CharField(required=False, allow_blank=True)
+    landline_phone = serializers.CharField(required=False, allow_blank=True)
+    bio = serializers.CharField(required=False, allow_blank=True)
     profile_pic = serializers.ImageField(required=False, allow_null=True)
     password = serializers.CharField(write_only=True, required=True)
     password2 = serializers.CharField(write_only=True, required=True)
@@ -36,11 +36,23 @@ class SignupSerializer(serializers.Serializer):
     def validate_code_meli(self, value):
         if not value.isdigit() and len(value) == 10:
             raise serializers.ValidationError("کد ملی وارد شده صحیح نیست")
+        if CustomUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError(" کد ملی قبلا ثبت شده")
+        return value
+
+    def validate_username(self, value):
+        if CustomUser.objects.filter(username=value).exists():
+            raise serializers.ValidationError("نام کاربری قبلاً ثبت شده است.")
         return value
 
     def validate_phone(self, value):
         if value and not value.isdigit():
             raise serializers.ValidationError("شماره تلفن باید فقط شامل اعداد باشد")
+        return value
+
+    def validate_email(self, value):
+        if value and CustomUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError("این ایمیل قبلاً ثبت شده است.")
         return value
 
     def create(self, validated_data):
@@ -226,3 +238,48 @@ class LeitnerQuestionSerializer(serializers.ModelSerializer):
         model = Leitner_question
         fields = ["student", "subquestion", "n", "datelq"]
         read_only_fields = ["student", "n", "datelq"]
+
+
+class FollowUpSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = ['id', 'student', 'following']
+        read_only_fields = ['id', 'student']
+
+    def validate_following(self, value):
+        if not CustomUser.objects.filter(id=value.id, is_question_designer=True).exists():
+            raise serializers.ValidationError("کاربر انتخاب‌شده طراح سوال نیست.")
+        return value
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    subquestions = serializers.SerializerMethodField()
+    questions = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = [
+            'profile', 'code_meli', 'username', 'first_name', 'last_name',
+            'is_question_designer', 'is_student', 'phone', 'email', 'address',
+            'province', 'city', 'county', 'landline_phone', 'bio',
+            'questions', 'subquestions'
+        ]
+        read_only_fields = ['code_meli', 'username']
+
+    def get_subquestions(self, user):
+        if not user.is_question_designer:
+            return None
+
+        try:
+            designer_obj = Question_designer.objects.get(designer=user)
+        except Question_designer.DoesNotExist:
+            return []
+
+        subquestions = Subquestion.objects.filter(question_designer=designer_obj)
+        return SubquestionSerializer(subquestions, many=True, context=self.context).data
+
+    def get_questions(self, user):
+        if not user.is_question_designer:
+            return None
+        questions = Question.objects.all()
+        return QuestionsSerializer(questions, many=True, context=self.context).data

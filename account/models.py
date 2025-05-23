@@ -104,10 +104,13 @@ class Question_designer(CommonFieldsMixin):
 class Student(CommonFieldsMixin):
     student = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='student',
                                 limit_choices_to={'is_student': True})
-    
-    # followed_question_designers = models.ManyToManyField(CustomUser, related_name='followers_as_student',
-    #                                                      limit_choices_to={'is_question_designer':True},
-    #                                                      blank=True, null=True)
+
+    following = models.ManyToManyField(
+        CustomUser,
+        related_name='followers',
+        limit_choices_to={'is_question_designer': True},
+        blank=True
+    )
 
     def __str__(self):
         return f'Student : {self.student}'

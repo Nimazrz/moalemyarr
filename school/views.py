@@ -1,8 +1,8 @@
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
-from rest_framework import viewsets
+from rest_framework import viewsets, generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authentication import BasicAuthentication
 from .serializer import *
@@ -42,10 +42,6 @@ class SignupAPIView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
-            code_meli = serializer.validated_data.get('code_meli')
-            username = serializer.validated_data.get('username')
-            if CustomUser.objects.filter(code_meli=code_meli).exists():
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
@@ -78,14 +74,13 @@ class CSRFTokenView(APIView):
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionsSerializer
-    authentication_classes = (BasicAuthentication, IsAuthenticated)
+    authentication_classes = (IsAuthenticated, )
     permissions_classes = (IsQuestionDesigner,)
 
 
 class SubquestionViewSet(viewsets.ModelViewSet):
     queryset = Subquestion.objects.all()
     serializer_class = SubquestionSerializer
-    authentication_classes = (BasicAuthentication,)
     permission_classes = [IsAuthenticated, IsQuestionDesigner]
 
     def get_queryset(self):
@@ -402,3 +397,27 @@ class LeitnerQuestionViewSet(viewsets.ModelViewSet):
             return Response({"message": "Subquestion already exists"}, status=status.HTTP_400_BAD_REQUEST)
         Leitner_question.objects.create(student=student, subquestion_id=subquestion_id)
         return Response({"message": "Leitner question created"}, status=status.HTTP_201_CREATED)
+
+
+class FollowQuestionDesignerView(APIView):
+    def post(self, request):
+        user = request.user
+        student_instance = get_object_or_404(Student, student=user)
+
+        try:
+            designer_id = int(request.data.get('following'))
+        except (TypeError, ValueError):
+            return Response({'error': 'شناسه طراح سوال نامعتبر است.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        designer_user = get_object_or_404(CustomUser, id=designer_id, is_question_designer=True)
+
+        student_instance.following.add(designer_user)
+
+        return Response({'message': 'طراح سوال با موفقیت دنبال شد.'}, status=status.HTTP_200_OK)
+
+
+class ProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = ProfileSerializer
+
+    def get_object(self):
+        return self.request.user

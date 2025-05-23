@@ -23,9 +23,12 @@ urlpatterns = [
     path("logout/", views.LogoutAPIView.as_view(), name="logout"),
     path('api_token_auth/', views.CustomAuthToken.as_view(), name='api_token_auth'),
 
+    path('profile/', views.ProfileView.as_view(), name='profile'),
     path('filter_exam/', views.get_exam_filter, name='filter_exam'),
     path('exam/', views.get_exam, name='get_exam'),
     path('leitner/', views.LeitnerAPIView.as_view(), name='leitner'),
+
+    path('followup/', views.FollowQuestionDesignerView.as_view(), name='followup'),
 
     # API schema views
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
