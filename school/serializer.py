@@ -96,6 +96,92 @@ class SubquestionSerializer(serializers.ModelSerializer):
                   'season', 'lesson', 'subject', 'right_answer', 'wrong_answer']
         read_only_fields = ['question_designer']
 
+    def update(self, instance, validated_data):
+        request = self.context['request']
+
+        instance.text = request.data.get('text', instance.text)
+        instance.score = request.data.get('score', instance.score)
+        instance.time = request.data.get('time', instance.time)
+        instance.question_id = request.data.get('question', instance.question_id)
+        instance.save()
+
+        if 'course' in validated_data:
+            course_data = request.data.get('course')
+            instance.course.set(course_data)
+            instance.save()
+
+        if 'book' in validated_data:
+            book_data = request.data.get('book')
+            instance.book.set(book_data)
+            instance.save()
+
+        if 'season' in validated_data:
+            season_data = request.data.get('season')
+            instance.season.set(season_data)
+            instance.save()
+
+        if 'lesson' in validated_data:
+            lesson_data = request.data.get('lesson')
+            instance.lesson.set(lesson_data)
+            instance.save()
+
+        if 'subject' in validated_data:
+            subject_data = request.data.get('subject')
+            instance.subject.set(subject_data)
+            instance.save()
+
+        right_answers_data = request.data.get('right_answer', [])
+        right_answer_ids = []
+
+        for answer_data in right_answers_data:
+            answer_id = answer_data.get('id')
+            if answer_id:
+                try:
+                    right_answer = Right_answer.objects.get(id=answer_id)
+                    right_answer.title = answer_data['title']
+                    right_answer.image = answer_data['image']
+                    right_answer.audio_file = answer_data['audio_file']
+                    right_answer.type = answer_data['type']
+                    right_answer.save()
+                    right_answer_ids.append(right_answer.id)
+                except Right_answer.DoesNotExist:
+                    pass
+            else:
+                new_answer = Right_answer.objects.create(subquestion=instance, **answer_data)
+                right_answer_ids.append(new_answer.id)
+
+        wrong_answers_data = request.data.get('wrong_answer', [])
+        wrong_answer_ids = []
+
+        for answer_data in wrong_answers_data:
+            try:
+                subject = Subject.objects.get(id=answer_data['subject'])
+            except Subject.DoesNotExist:
+                raise serializers.ValidationError({'subject': 'Invalid subject ID'})
+
+            answer_id = answer_data.get('id')
+            if answer_id:
+                try:
+                    wrong_answer = Wrong_answer.objects.get(id=answer_id)
+                    wrong_answer.title = answer_data['title']
+                    wrong_answer.image = answer_data['image']
+                    wrong_answer.audio_file = answer_data['audio_file']
+                    wrong_answer.subject = subject
+                    wrong_answer.save()
+                    wrong_answer_ids.append(wrong_answer.id)
+                except Wrong_answer.DoesNotExist:
+                    pass
+            else:
+                Wrong_answer.objects.create(
+                    subquestion=instance,
+                    title=answer_data['title'],
+                    image=answer_data['image'],
+                    audio_file=answer_data['audio_file'],
+                    subject=subject
+                )
+
+        return instance
+
     def validate(self, attrs):
         if 'right_answer' not in attrs or not attrs['right_answer']:
             raise serializers.ValidationError({"right_answer": "This field is required."})
@@ -119,20 +205,17 @@ class SubquestionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("You are not authorized to create subquestions.")
         validated_data['question_designer'] = question_designer
 
-        # Create the Subquestion instance
         subquestion = Subquestion.objects.create(**validated_data)
 
-        subquestion.course.set(courses_data)  # Assuming IDs are provided
+        subquestion.course.set(courses_data)
         subquestion.book.set(books_data)
         subquestion.season.set(seasons_data)
         subquestion.lesson.set(lessons_data)
         subquestion.subject.set(subjects_data)
 
-        # Create related Right_answer instances
         for right_answer_data in right_answers_data:
             Right_answer.objects.create(subquestion=subquestion, **right_answer_data)
 
-        # Create related Wrong_answer instances
         for wrong_answer_data in wrong_answers_data:
             Wrong_answer.objects.create(subquestion=subquestion, **wrong_answer_data)
 

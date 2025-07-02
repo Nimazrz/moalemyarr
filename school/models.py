@@ -8,11 +8,11 @@ from datetime import date
 # Create your models here.
 
 def right_answer_upload_path(instance, filename):
-    return f'right_answers/{instance.question.id}/{filename}'
+    return f'right_answers/{instance.subquestion.id}/{filename}'
 
 
 def wrong_answer_upload_path(instance, filename):
-    return f'wrong_answers/{instance.question.id}/{filename}'
+    return f'wrong_answers/{instance.subquestion.id}/{filename}'
 
 
 class Course(models.Model):
@@ -221,7 +221,7 @@ class Right_answer(models.Model):
     title = models.CharField(max_length=200)
     image = models.ImageField(upload_to=right_answer_upload_path, blank=True, null=True)
     audio_file = models.FileField(upload_to=right_answer_upload_path, blank=True, null=True)
-    type = models.CharField(choices=TYPE_ANSWER, max_length=2, blank=False, null=False)
+    type = models.CharField(choices=TYPE_ANSWER, max_length=2, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

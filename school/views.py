@@ -18,6 +18,8 @@ from .tasks import process_exam_answers
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from account.models import CustomUser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.decorators import action
 
 
 class CustomAuthToken(ObtainAuthToken):
@@ -74,14 +76,38 @@ class CSRFTokenView(APIView):
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionsSerializer
-    authentication_classes = (IsAuthenticated, )
     permissions_classes = (IsQuestionDesigner,)
+
+    @action(detail=True, methods=['delete'], url_path='delete_title')
+    def delete_title(self, request, pk=None):
+        question = self.get_object()
+        question.title = ''
+        question.save()
+        return Response({'message': 'عنوان حذف شد'}, status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['delete'], url_path='delete_audio_file')
+    def delete_audio_file(self, request, pk=None):
+        question = self.get_object()
+        question.audio_file.delete(save=False)
+        question.audio_file = None
+        question.save()
+        return Response({'message': 'فایل صوتی حذف شد'}, status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['delete'], url_path='delete_image')
+    def delete_image(self, request, pk=None):
+        question = self.get_object()
+        question.image.delete(save=False)
+        question.image = None
+        question.save()
+        return Response({'message': 'تصویر حذف شد'}, status=status.HTTP_204_NO_CONTENT)
 
 
 class SubquestionViewSet(viewsets.ModelViewSet):
     queryset = Subquestion.objects.all()
     serializer_class = SubquestionSerializer
-    permission_classes = [IsAuthenticated, IsQuestionDesigner]
+    permission_classes = [IsQuestionDesigner]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
 
     def get_queryset(self):
         custom_user = self.request.user
