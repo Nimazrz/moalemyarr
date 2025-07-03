@@ -10,16 +10,15 @@ from .permissions import *
 from django.shortcuts import get_object_or_404
 from .models import *
 from rest_framework.decorators import api_view, permission_classes
-from django.db.models import F, ExpressionWrapper, IntegerField
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
-from django.db.models import Q
 from .tasks import process_exam_answers
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from account.models import CustomUser
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import action
+from django.db.models import Sum, Avg, Count, Q, F, ExpressionWrapper, IntegerField
 
 
 class CustomAuthToken(ObtainAuthToken):
@@ -206,10 +205,16 @@ def get_exam(request: Request):
             Q(lesson__in=lesson_ids) |
             Q(subject__in=subject_ids)
         ).annotate(
+            zero_sum=Sum('practice__zero'),
+            nf_sum=Sum('practice__nf'),
+            nt_sum=Sum('practice__nt'),
+        ).annotate(
             total_calculation=ExpressionWrapper(
-                (((F('practice__zero') * 2) - 1) * (F('practice__nf') + 1) / (F('practice__nt') + 1)),
-                output_field=IntegerField())
+                ((F('zero_sum') * 2 - 1) * (F('nf_sum') + 1)) / (F('nt_sum') + 1),
+                output_field=IntegerField()
+            )
         ).order_by('-total_calculation')
+
         subquestions_serializer = ExamSubquestionSerializer(subquestions, many=True)
         subquestions_data = subquestions_serializer.data
 
@@ -233,16 +238,21 @@ def get_exam(request: Request):
             "11":12
         }}
         """
+
         user_answers = request.data.get('answers', {})
         right_answers = request.session.get('right_answers', [])
         subquestions_serializer = request.session.get('subquestions_serializer', {})
-        task = process_exam_answers.delay(
-            request.user.id,
-            user_answers,
-            right_answers,
-            subquestions_serializer
-        )
-        return Response({"message": "Your answers are being processed."}, status=status.HTTP_202_ACCEPTED)
+
+        if not user_answers:
+            return Response({'error': 'no answers'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            task = process_exam_answers.delay(
+                request.user.id,
+                user_answers,
+                right_answers,
+                subquestions_serializer
+            )
+            return Response({"message": "Your answers are being processed."}, status=status.HTTP_202_ACCEPTED)
 
 
 class LeitnerAPIView(APIView):
@@ -303,7 +313,7 @@ class LeitnerAPIView(APIView):
             leitner.last_step += 1
             leitner.datel = date.today()
             leitner.save()
-            return Response({"message": "No subquestions for this step, go for rest of them"},
+            return Response({"message": f"No subquestions for this step, go for rest of them, {numbers[(leitner.last_step) - 1]}"},
                             status=status.HTTP_200_OK)
 
         request.session['right_answers'] = right_answers
@@ -406,7 +416,6 @@ class LeitnerAPIView(APIView):
 class LeitnerQuestionViewSet(viewsets.ModelViewSet):
     queryset = Leitner_question.objects.all()
     serializer_class = LeitnerQuestionSerializer
-    authentication_classes = (BasicAuthentication,)
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -421,25 +430,70 @@ class LeitnerQuestionViewSet(viewsets.ModelViewSet):
         subquestion_id = request.data['subquestion']
         if Leitner_question.objects.filter(student=student, subquestion_id=subquestion_id).exists():
             return Response({"message": "Subquestion already exists"}, status=status.HTTP_400_BAD_REQUEST)
-        Leitner_question.objects.create(student=student, subquestion_id=subquestion_id)
+        Leitner_question.objects.create(student=student, subquestion_id=subquestion_id, datelq=date.today())
         return Response({"message": "Leitner question created"}, status=status.HTTP_201_CREATED)
 
 
 class FollowQuestionDesignerView(APIView):
-    def post(self, request):
-        user = request.user
-        student_instance = get_object_or_404(Student, student=user)
-
+    def get_student(self, request):
         try:
-            designer_id = int(request.data.get('following'))
+            return Student.objects.get(student=request.user)
+        except Student.DoesNotExist:
+            return None
+
+    def get_designer(self, designer_id):
+        try:
+            return get_object_or_404(CustomUser, id=int(designer_id), is_question_designer=True)
         except (TypeError, ValueError):
-            return Response({'error': 'شناسه طراح سوال نامعتبر است.'}, status=status.HTTP_400_BAD_REQUEST)
+            return None
 
-        designer_user = get_object_or_404(CustomUser, id=designer_id, is_question_designer=True)
+    def get(self, request):
+        student = self.get_student(request)
+        if not student:
+            return Response({"error": "دانش‌آموز یافت نشد."}, status=status.HTTP_404_NOT_FOUND)
 
-        student_instance.following.add(designer_user)
+        serializer = FollowUpSerializer(student)
+        return Response({"student": serializer.data}, status=status.HTTP_200_OK)
 
+    def post(self, request):
+        student = self.get_student(request)
+        if not student:
+            return Response({"error": "دانش‌آموز یافت نشد."}, status=status.HTTP_400_BAD_REQUEST)
+
+        designer = self.get_designer(request.data.get('following'))
+        if not designer:
+            return Response({"error": "شناسه طراح سوال نامعتبر است."}, status=status.HTTP_400_BAD_REQUEST)
+
+        student.following.add(designer)
         return Response({'message': 'طراح سوال با موفقیت دنبال شد.'}, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        student = self.get_student(request)
+        if not student:
+            return Response({"error": "دانش‌آموز یافت نشد."}, status=status.HTTP_400_BAD_REQUEST)
+
+        designer_ids = request.data.get('following', [])
+        if not isinstance(designer_ids, list):
+            return Response({"error": "فرمت لیست طراحان سوال باید یک لیست از آیدی‌ها باشد."}, status=status.HTTP_400_BAD_REQUEST)
+
+        designers = CustomUser.objects.filter(id__in=designer_ids, is_question_designer=True)
+        if not designers.exists():
+            return Response({"error": "هیچ طراح سوال معتبری یافت نشد."}, status=status.HTTP_400_BAD_REQUEST)
+
+        student.following.add(*designers)
+        return Response({'message': 'طراحان سوال با موفقیت دنبال شدند.'}, status=status.HTTP_200_OK)
+
+    def delete(self, request):
+        student = self.get_student(request)
+        if not student:
+            return Response({"error": "دانش‌آموز یافت نشد."}, status=status.HTTP_400_BAD_REQUEST)
+
+        designer = self.get_designer(request.data.get('following'))
+        if not designer:
+            return Response({"error": "شناسه طراح سوال نامعتبر است."}, status=status.HTTP_400_BAD_REQUEST)
+
+        student.following.remove(designer)
+        return Response({'message': 'طراح سوال از لیست دنبال‌شده‌ها حذف شد.'}, status=status.HTTP_200_OK)
 
 
 class ProfileView(generics.RetrieveUpdateAPIView):

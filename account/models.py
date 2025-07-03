@@ -72,7 +72,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return f'{self.first_name} {self.last_name}'
 
     def __str__(self):
-        return f'{self.get_full_name()}'
+        return f'{self.get_full_name()} (id: {self.id})'
 
     class Meta:
         db_table = 'custom_users'
@@ -113,7 +113,7 @@ class Student(CommonFieldsMixin):
     )
 
     def __str__(self):
-        return f'Student : {self.student}'
+        return f'Student : {self.student}(id:{self.id})'
 
     class Meta:
         db_table = 'student'
