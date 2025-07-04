@@ -221,7 +221,8 @@ class LeitnerView(View):
             self.upgrade_subquestions(student)
             leitner.save()
             return redirect('schoolview:index')
-        subquestions = Subquestion.objects.filter(leitner_question__n=numbers[(leitner.last_step) - 1])
+        subquestions = Subquestion.objects.filter(leitner_question__n=numbers[(leitner.last_step) - 1],
+                                                  leitner_question__student=student)
 
         if not subquestions:
             self.upgrade_subquestions(student)

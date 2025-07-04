@@ -1,10 +1,9 @@
-from rest_framework import status, generics
+from rest_framework import status, generics, mixins
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework import viewsets, generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.authentication import BasicAuthentication
 from .serializer import *
 from .permissions import *
 from django.shortcuts import get_object_or_404
@@ -285,7 +284,7 @@ class LeitnerAPIView(APIView):
 
         if leitner.last_step == 1 and leitner.datel == date.today():
             return Response({"message": "You have completed your Leitner for today"},
-                            status=status.HTTP_400_BAD_REQUEST)
+                            status=status.HTTP_200_OK)
 
         numbers = (30, 14, 6, 2, 0)
         if leitner.last_step > 5:
@@ -295,9 +294,11 @@ class LeitnerAPIView(APIView):
             leitner.save()
             return Response({"message": "Done for today"}, status=status.HTTP_200_OK)
 
-        subquestions = Subquestion.objects.filter(leitner_question__n=numbers[(leitner.last_step) - 1])
+        subquestions = Subquestion.objects.filter(leitner_question__n=numbers[(leitner.last_step) - 1],
+                                                  leitner_question__student=student)
         subquestions_serializer = ExamSubquestionSerializer(subquestions, many=True)
         subquestions_data = subquestions_serializer.data
+        print(subquestions_data)
 
         right_answers = [
             {
@@ -413,25 +414,46 @@ class LeitnerAPIView(APIView):
         return Response({'results': results}, status=status.HTTP_200_OK)
 
 
-class LeitnerQuestionViewSet(viewsets.ModelViewSet):
+class LeitnerQuestionViewSet(mixins.ListModelMixin,
+                             mixins.CreateModelMixin,
+                             mixins.DestroyModelMixin,
+                             generics.GenericAPIView):
     queryset = Leitner_question.objects.all()
     serializer_class = LeitnerQuestionSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         student = get_object_or_404(Student, student=self.request.user)
         return Leitner_question.objects.filter(student=student)
 
-    def create(self, request, *args, **kwargs):
-        custom_user = get_object_or_404(CustomUser, id=self.request.user.id)
-        if not custom_user.is_student:
+    def get(self, request, *args, **kwargs):
+        student = get_object_or_404(Student, student=request.user)
+        queryset = Leitner_question.objects.filter(student=student)
+        serializer = LeitnerQuestionSerializer(queryset, many=True)
+        return Response({'results': serializer.data}, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        student = get_object_or_404(CustomUser, id=self.request.user.id)
+        if not student.is_student:
             return Response({"message": "You are not allowed to create questions"}, )
-        student = get_object_or_404(Student, student=custom_user)
+        student = get_object_or_404(Student, student=student)
         subquestion_id = request.data['subquestion']
         if Leitner_question.objects.filter(student=student, subquestion_id=subquestion_id).exists():
             return Response({"message": "Subquestion already exists"}, status=status.HTTP_400_BAD_REQUEST)
         Leitner_question.objects.create(student=student, subquestion_id=subquestion_id, datelq=date.today())
         return Response({"message": "Leitner question created"}, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, *args, **kwargs):
+        student = get_object_or_404(Student, student=self.request.user)
+        subquestion_id = request.data.get('subquestion')
+
+        leitner_q = Leitner_question.objects.filter(student=student, subquestion_id=subquestion_id).first()
+        if not leitner_q:
+            return Response({'message': 'سوال در لایتنر یافت نشد.'}, status=status.HTTP_404_NOT_FOUND)
+
+        leitner_q.delete()
+        return Response({'message': 'سوال از لایتنر حذف شد.'}, status=status.HTTP_200_OK)
+
+
 
 
 class FollowQuestionDesignerView(APIView):
