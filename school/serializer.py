@@ -366,3 +366,11 @@ class ProfileSerializer(serializers.ModelSerializer):
             return None
         questions = Question.objects.all()
         return QuestionsSerializer(questions, many=True, context=self.context).data
+
+
+class QuestionDesignerDetailSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='get_full_name')
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username', 'full_name', 'profile', 'bio']
+

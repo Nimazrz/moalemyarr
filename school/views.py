@@ -106,7 +106,6 @@ class SubquestionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsQuestionDesigner]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
-
     def get_queryset(self):
         custom_user = self.request.user
         question_designer = Question_designer.objects.filter(designer=custom_user).first()
@@ -314,8 +313,9 @@ class LeitnerAPIView(APIView):
             leitner.last_step += 1
             leitner.datel = date.today()
             leitner.save()
-            return Response({"message": f"No subquestions for this step, go for rest of them, {numbers[(leitner.last_step) - 1]}"},
-                            status=status.HTTP_200_OK)
+            return Response(
+                {"message": f"No subquestions for this step, go for rest of them, {numbers[(leitner.last_step) - 1]}"},
+                status=status.HTTP_200_OK)
 
         request.session['right_answers'] = right_answers
         return Response(
@@ -454,8 +454,6 @@ class LeitnerQuestionViewSet(mixins.ListModelMixin,
         return Response({'message': 'سوال از لایتنر حذف شد.'}, status=status.HTTP_200_OK)
 
 
-
-
 class FollowQuestionDesignerView(APIView):
     def get_student(self, request):
         try:
@@ -496,7 +494,8 @@ class FollowQuestionDesignerView(APIView):
 
         designer_ids = request.data.get('following', [])
         if not isinstance(designer_ids, list):
-            return Response({"error": "فرمت لیست طراحان سوال باید یک لیست از آیدی‌ها باشد."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "فرمت لیست طراحان سوال باید یک لیست از آیدی‌ها باشد."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         designers = CustomUser.objects.filter(id__in=designer_ids, is_question_designer=True)
         if not designers.exists():
@@ -523,3 +522,21 @@ class ProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class IndexAPIView(APIView):
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        designers = CustomUser.objects.filter(is_question_designer=True)
+        serializer = QuestionDesignerDetailSerializer(designers, many=True)
+        return Response({
+            "question_designers": serializer.data
+        })
+
+
+class QuestionDesignerDetailAPIView(generics.RetrieveAPIView):
+    queryset = CustomUser.objects.filter(is_question_designer=True)
+    serializer_class = QuestionDesignerDetailSerializer
+    lookup_field = 'id'
+    permission_classes = [AllowAny]

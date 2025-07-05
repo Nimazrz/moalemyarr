@@ -29,6 +29,8 @@ urlpatterns = [
     path('leitnerquestion/', views.LeitnerQuestionViewSet.as_view(), name='leitnerquestion'),
 
     path('followup/', views.FollowQuestionDesignerView.as_view(), name='followup'),
+    path('index/', views.IndexAPIView.as_view(), name='api-index'),
+    path('question_designer/<int:id>/', views.QuestionDesignerDetailAPIView.as_view(), name='question-designer-detail'),
 
     # API schema views
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
