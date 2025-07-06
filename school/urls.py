@@ -14,6 +14,7 @@ router.register(r'books', views.BookViewSet)
 router.register(r'seasons', views.SeasonViewSet)
 router.register(r'lessons', views.LessonViewSet)
 router.register(r'subjects', views.SubjectViewSet)
+router.register(r'socialedit', views.SocialDesignerEditViewSet)
 
 
 app_name = "school"
@@ -22,15 +23,18 @@ urlpatterns = [
     path("logout/", views.LogoutAPIView.as_view(), name="logout"),
     path('api_token_auth/', views.CustomAuthToken.as_view(), name='api_token_auth'),
 
-    path('profile/', views.ProfileView.as_view(), name='profile'),
     path('filter_exam/', views.get_exam_filter, name='filter_exam'),
     path('exam/', views.get_exam, name='get_exam'),
     path('leitner/', views.LeitnerAPIView.as_view(), name='leitner'),
     path('leitnerquestion/', views.LeitnerQuestionViewSet.as_view(), name='leitnerquestion'),
 
+    path('profile/', views.ProfileView.as_view(), name='profile'),
     path('followup/', views.FollowQuestionDesignerView.as_view(), name='followup'),
+
+    # index
     path('index/', views.IndexAPIView.as_view(), name='api-index'),
     path('question_designer/<int:id>/', views.QuestionDesignerDetailAPIView.as_view(), name='question-designer-detail'),
+    path('social/', views.SocialDesignerAPIView.as_view(), name='social-question-designer-detail'),
 
     # API schema views
     path('schema/', SpectacularAPIView.as_view(), name='schema'),

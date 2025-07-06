@@ -18,6 +18,7 @@ from account.models import CustomUser
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import action
 from django.db.models import Sum, Avg, Count, Q, F, ExpressionWrapper, IntegerField
+from rest_framework.pagination import PageNumberPagination
 
 
 class CustomAuthToken(ObtainAuthToken):
@@ -535,8 +536,29 @@ class IndexAPIView(APIView):
         })
 
 
+# show in index page
 class QuestionDesignerDetailAPIView(generics.RetrieveAPIView):
     queryset = CustomUser.objects.filter(is_question_designer=True)
     serializer_class = QuestionDesignerDetailSerializer
     lookup_field = 'id'
     permission_classes = [AllowAny]
+
+
+class SocialDesignerAPIView(generics.ListAPIView):
+    queryset = Social.objects.all()
+    permission_classes = [AllowAny,]
+    serializer_class = SocialSerializer
+    pagination_class = PageNumberPagination
+    pagination_class.page_size = 20
+
+class SocialDesignerEditViewSet(viewsets.ModelViewSet):
+    queryset = Social.objects.all()
+    serializer_class = SocialSerializer
+    permission_classes = [IsAuthenticated, IsQuestionDesigner]
+
+
+
+
+
+
+

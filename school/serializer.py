@@ -370,7 +370,23 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class QuestionDesignerDetailSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='get_full_name')
+
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'full_name', 'profile', 'bio']
+
+
+class ImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Image
+        fields = '__all__'
+
+
+class SocialSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Social
+        fields = ['id', 'author', 'title', 'time', 'text', 'video', 'view', 'images']
+        read_only_fields = ['author', 'title', 'time', 'text', 'video', 'view', 'images']
 
