@@ -33,8 +33,11 @@ urlpatterns = [
 
     # index
     path('index/', views.IndexAPIView.as_view(), name='api-index'),
+    # question designer detail in index
     path('question_designer/<int:id>/', views.QuestionDesignerDetailAPIView.as_view(), name='question-designer-detail'),
+
     path('social/', views.SocialDesignerAPIView.as_view(), name='social-question-designer-detail'),
+    path('social/<int:id>/', views.SocialDesignerRetrieveAPIView.as_view(), name='social-question-designer-retrieve'),
 
     # API schema views
     path('schema/', SpectacularAPIView.as_view(), name='schema'),

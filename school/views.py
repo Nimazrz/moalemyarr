@@ -1,4 +1,5 @@
 from rest_framework import status, generics, mixins
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
@@ -543,22 +544,46 @@ class QuestionDesignerDetailAPIView(generics.RetrieveAPIView):
     lookup_field = 'id'
     permission_classes = [AllowAny]
 
+# show in index page
+# class SocialDesignerAPIView(generics.ListAPIView):
+#     queryset = Social.objects.all()
+#     permission_classes = [AllowAny,]
+#     serializer_class = SocialSerializer
+#     pagination_class = PageNumberPagination
+#     pagination_class.page_size = 20
+#
+#     # تبدیل کنم به mixin تا بتونم از retrive هم استفاده کنم در کنار list
 
-class SocialDesignerAPIView(generics.ListAPIView):
+class SocialDesignerAPIView(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Social.objects.all()
-    permission_classes = [AllowAny,]
     serializer_class = SocialSerializer
+    permission_classes = [AllowAny,]
     pagination_class = PageNumberPagination
     pagination_class.page_size = 20
+
+    def get(self, request):
+        socials = Social.objects.all()
+        serializer = SocialSerializer(socials, many=True)
+        return Response({"socials": serializer.data}, status=status.HTTP_200_OK)
+
+class SocialDesignerRetrieveAPIView(mixins.RetrieveModelMixin, generics.GenericAPIView):
+    queryset = Social.objects.all()
+    serializer_class = SocialSerializer
+    lookup_field = 'id'
+    permission_classes = [AllowAny]
+
+    def get(self, request, id):
+        social = Social.objects.get(id=id)
+        serializer = SocialSerializer(social)
+        return Response({"social": serializer.data}, status=status.HTTP_200_OK)
+
+
+
+
 
 class SocialDesignerEditViewSet(viewsets.ModelViewSet):
     queryset = Social.objects.all()
     serializer_class = SocialSerializer
     permission_classes = [IsAuthenticated, IsQuestionDesigner]
-
-
-
-
-
 
 

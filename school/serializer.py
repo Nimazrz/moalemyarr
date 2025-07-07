@@ -388,5 +388,4 @@ class SocialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Social
         fields = ['id', 'author', 'title', 'time', 'text', 'video', 'view', 'images']
-        read_only_fields = ['author', 'title', 'time', 'text', 'video', 'view', 'images']
-
+        read_only_fields = ['id', 'author']

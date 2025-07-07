@@ -95,7 +95,7 @@ class Question_designer(CommonFieldsMixin):
                                  limit_choices_to={'is_question_designer': True})
 
     def __str__(self):
-        return f'Question_designer : {self.designer.username}(id:{self.designer.id})'
+        return f'Question_designer : {self.designer.username}(id:{self.id})'
 
     class Meta:
         db_table = 'question_designer'
