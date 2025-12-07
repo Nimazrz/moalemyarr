@@ -544,16 +544,8 @@ class QuestionDesignerDetailAPIView(generics.RetrieveAPIView):
     lookup_field = 'id'
     permission_classes = [AllowAny]
 
-# show in index page
-# class SocialDesignerAPIView(generics.ListAPIView):
-#     queryset = Social.objects.all()
-#     permission_classes = [AllowAny,]
-#     serializer_class = SocialSerializer
-#     pagination_class = PageNumberPagination
-#     pagination_class.page_size = 20
-#
-#     # تبدیل کنم به mixin تا بتونم از retrive هم استفاده کنم در کنار list
 
+# show in index page
 class SocialDesignerAPIView(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Social.objects.all()
     serializer_class = SocialSerializer
@@ -566,6 +558,7 @@ class SocialDesignerAPIView(mixins.ListModelMixin, generics.GenericAPIView):
         serializer = SocialSerializer(socials, many=True)
         return Response({"socials": serializer.data}, status=status.HTTP_200_OK)
 
+
 class SocialDesignerRetrieveAPIView(mixins.RetrieveModelMixin, generics.GenericAPIView):
     queryset = Social.objects.all()
     serializer_class = SocialSerializer
@@ -576,9 +569,6 @@ class SocialDesignerRetrieveAPIView(mixins.RetrieveModelMixin, generics.GenericA
         social = Social.objects.get(id=id)
         serializer = SocialSerializer(social)
         return Response({"social": serializer.data}, status=status.HTTP_200_OK)
-
-
-
 
 
 class SocialDesignerEditViewSet(viewsets.ModelViewSet):
