@@ -1,13 +1,214 @@
 {% extends 'parent/base.html' %}
 {% load static %}
-{% block title %}form{% endblock %}
+{% block title %}ایجاد سوال{% endblock %}
+
 {% block content %}
+<div style="display: flex; gap: 35px; margin: 40px auto; max-width: 1500px; direction: rtl; font-family: Tahoma, sans-serif;">
 
-  <h2>ایجاد سوال جدید</h2>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">ثبت سوال</button>
-  </form>
+    <!-- فرم اصلی ساخت سوال -->
+    <div style="flex: 2; background: #ffffff; padding: 35px; border-radius: 18px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);">
+        <h2 style="color: #007bff; text-align: center; margin-bottom: 30px; font-size: 26px; font-weight: bold;">
+            ایجاد سوال جدید
+        </h2>
 
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success text-center" style="padding:12px; border-radius:8px; margin-bottom:20px; background:#d4edda; color:#155724;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div style="margin-bottom: 25px;">
+                <label style="font-weight: bold; font-size: 16px; color: #333;">شماره سوال:</label>
+                {{ form.question }}
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label style="font-weight: bold; font-size: 16px; color: #333;">متن سوال:</label>
+                {{ form.text }}
+            </div>
+
+            <div style="margin-bottom: 35px;">
+                <label style="font-weight: bold; font-size: 16px; color: #333;">تصویر سوال (اختیاری):</label>
+                {{ form.image }}
+            </div>
+
+            <button type="submit" style="width:100%; padding:16px; background:#007bff; color:white; border:none; border-radius:12px; font-size:19px; font-weight:bold; cursor:pointer; transition:0.3s;">
+                ثبت سوال و ادامه به پاسخ‌ها
+            </button>
+        </form>
+    </div>
+
+    <!-- پنل کناری — تنظیمات پیش‌فرض با فیلتر زنجیره‌ای هوشمند -->
+    <div style="flex: 1; background: linear-gradient(135deg, #f8fff8, #f0fff4); padding:30px; border-radius:18px; border:4px solid #28a745; position:sticky; top:25px; align-self: flex-start; box-shadow: 0 6px 25px rgba(40,167,69,0.15);">
+        <h3 style="color:#28a745; text-align:center; margin:0 0 15px 0; font-size:22px; font-weight:bold;">
+            تنظیمات پیش‌فرض همه سوالات
+        </h3>
+        <p style="font-size:14px; text-align:center; color:#2c3e50; margin-bottom:25px;">
+            فقط گزینه‌های مرتبط نمایش داده میشه
+        </p>
+
+        <form method="post" id="defaults-form">
+            {% csrf_token %}
+            <input type="hidden" name="save_defaults" value="1">
+
+            <!-- امتیاز -->
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:bold; font-size:15px; color:#1e3a1e;">امتیاز:</label>
+                <input type="number" name="default_score" value="{{ defaults.score|default:1 }}" min="0"
+                       style="width:100%; padding:10px; border-radius:8px; border:1px solid #28a745; font-size:15px;">
+            </div>
+
+            <!-- زمان -->
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:bold; font-size:15px; color:#1e3a1e;">زمان (ثانیه):</label>
+                <input type="number" name="default_time" value="{{ defaults.time|default:60 }}" min="0"
+                       style="width:100%; padding:10px; border-radius:8px; border:1px solid #28a745; font-size:15px;">
+            </div>
+
+            <!-- پایه -->
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:bold; font-size:15px; color:#1e3a1e;">پایه:</label>
+                <select name="default_course" id="id_default_course" style="width:100%; padding:10px; border-radius:8px; border:1px solid #28a745; font-size:15px;">
+                    <option value="">-- انتخاب کنید --</option>
+                    {% for course in course_list %}
+                        <option value="{{ course.id }}" {% if defaults.course == course.id|stringformat:"s" %}selected{% endif %}>
+                            {{ course.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- کتاب -->
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:bold; font-size:15px; color:#1e3a1e;">کتاب:</label>
+                <select name="default_book" id="id_default_book" style="width:100%; padding:10px; border-radius:8px; border:1px solid #28a745; font-size:15px;">
+                    <option value="">-- ابتدا پایه را انتخاب کنید --</option>
+                </select>
+            </div>
+
+            <!-- فصل -->
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:bold; font-size:15px; color:#1e3a1e;">فصل:</label>
+                <select name="default_season" id="id_default_season" style="width:100%; padding:10px; border-radius:8px; border:1px solid #28a745; font-size:15px;" disabled>
+                    <option value="">-- ابتدا کتاب را انتخاب کنید --</option>
+                </select>
+            </div>
+
+            <!-- درس -->
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:bold; font-size:15px; color:#1e3a1e;">درس:</label>
+                <select name="default_lesson" id="id_default_lesson" style="width:100%; padding:10px; border-radius:8px; border:1px solid #28a745; font-size:15px;" disabled>
+                    <option value="">-- ابتدا فصل را انتخاب کنید --</option>
+                </select>
+            </div>
+
+            <!-- موضوع -->
+            <div style="margin-bottom:20px;">
+                <label style="font-weight:bold; font-size:15px; color:#1e3a1e;">موضوع:</label>
+                <select name="default_subject" id="id_default_subject" style="width:100%; padding:10px; border-radius:8px; border:1px solid #28a745; font-size:15px;" disabled>
+                    <option value="">-- ابتدا درس را انتخاب کنید --</option>
+                </select>
+            </div>
+
+            <button type="submit" style="width:100%; padding:14px; background:#28a745; color:white; border:none; border-radius:10px; font-size:17px; font-weight:bold; cursor:pointer;">
+                ذخیره تنظیمات پیش‌فرض
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- jQuery + Ajax برای فیلتر زنجیره‌ای هوشمند -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    const $course   = $('#id_default_course');
+    const $book     = $('#id_default_book');
+    const $season   = $('#id_default_season');
+    const $lesson   = $('#id_default_lesson');
+    const $subject  = $('#id_default_subject');
+
+    // تابع بارگذاری کتاب‌ها
+    function loadBooks(courseId) {
+        if (!courseId) {
+            $book.html('<option value="">-- ابتدا پایه را انتخاب کنید --</option>');
+            $season.prop('disabled', true).html('<option value="">-- ابتدا کتاب را انتخاب کنید --</option>');
+            $lesson.prop('disabled', true); $subject.prop('disabled', true);
+            return;
+        }
+        $.get("{% url 'schoolview:get_books' %}?course_id=" + courseId, function(data) {
+            let options = '<option value="">-- انتخاب کنید --</option>';
+            data.forEach(b => {
+                const selected = ({{ defaults.book|default:0 }} == b.id) ? 'selected' : '';
+                options += `<option value="${b.id}" ${selected}>${b.name}</option>`;
+            });
+            $book.html(options);
+            // اگر کتاب قبلاً انتخاب شده بود، فصل‌ها رو هم بارگذاری کن
+            {% if defaults.book %}
+                loadSeasons({{ defaults.book }});
+            {% endif %}
+        });
+    }
+
+    function loadSeasons(bookId) {
+        if (!bookId) return;
+        $.get("{% url 'schoolview:get_seasons' %}?book_id=" + bookId, function(data) {
+            let options = '<option value="">-- انتخاب کنید --</option>';
+            data.forEach(s => {
+                const selected = ({{ defaults.season|default:0 }} == s.id) ? 'selected' : '';
+                options += `<option value="${s.id}" ${selected}>${s.name}</option>`;
+            });
+            $season.html(options).prop('disabled', false);
+            {% if defaults.season %}
+                loadLessons({{ defaults.season }});
+            {% endif %}
+        });
+    }
+
+    function loadLessons(seasonId) {
+        if (!seasonId) return;
+        $.get("{% url 'schoolview:get_lessons' %}?season_id=" + seasonId, function(data) {
+            let options = '<option value="">-- انتخاب کنید --</option>';
+            data.forEach(l => {
+                const selected = ({{ defaults.lesson|default:0 }} == l.id) ? 'selected' : '';
+                options += `<option value="${l.id}" ${selected}>${l.name}</option>`;
+            });
+            $lesson.html(options).prop('disabled', false);
+            {% if defaults.lesson %}
+                loadSubjects({{ defaults.lesson }});
+            {% endif %}
+        });
+    }
+
+    function loadSubjects(lessonId) {
+        if (!lessonId) return;
+        $.get("{% url 'schoolview:get_subjects' %}?lesson_id=" + lessonId, function(data) {
+            let options = '<option value="">-- انتخاب کنید --</option>';
+            data.forEach(s => {
+                const selected = ({{ defaults.subject|default:0 }} == s.id) ? 'selected' : '';
+                options += `<option value="${s.id}" ${selected}>${s.name}</option>`;
+            });
+            $subject.html(options).prop('disabled', false);
+        });
+    }
+
+    // وقتی پایه تغییر کرد
+    $course.change(function() {
+        loadBooks($(this).val());
+    });
+
+    $book.change(function() { loadSeasons($(this).val()); });
+    $season.change(function() { loadLessons($(this).val()); });
+    $lesson.change(function() { loadSubjects($(this).val()); });
+
+    // بارگذاری اولیه کامل (بعد از رفرش هم درست نشون بده!)
+    {% if defaults.course %}
+        loadBooks({{ defaults.course }});
+    {% endif %}
+});
+</script>
 {% endblock %}

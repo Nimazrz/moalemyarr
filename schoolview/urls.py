@@ -36,4 +36,10 @@ urlpatterns = [
     path('subquestion_view/<int:subquestion_id>/', views.subquestion_view, name='subquestion_view'),
     path('ajax/hierarchy-fetch/', views.ajax_hierarchy_fetch, name='ajax_hierarchy_fetch'),
 
+
+    path('ajax/get-books/', views.get_books, name='get_books'),
+    path('ajax/get-seasons/', views.get_seasons, name='get_seasons'),
+    path('ajax/get-lessons/', views.get_lessons, name='get_lessons'),
+    path('ajax/get-subjects/', views.get_subjects, name='get_subjects'),
+
 ]

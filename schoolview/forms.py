@@ -42,20 +42,20 @@ RightAnswerFormSet = modelformset_factory(Right_answer, form=RightAnswerForm, ex
 WrongAnswerFormSet = modelformset_factory(Wrong_answer, form=WrongAnswerForm, extra=1, can_delete=True)
 
 
+# forms.py
 class SubquestionForm(forms.ModelForm):
     class Meta:
         model = Subquestion
-        fields = ['question', 'text', 'image', 'score', 'time', 'course', 'book', 'season', 'lesson', 'subject']
+        fields = ['question', 'text', 'image']  # فقط این ۳ تا!
 
-    def is_valid(self):
-        valid = super().is_valid()
-        if not valid:
-            return valid
-        if not (self.cleaned_data.get('text') or self.cleaned_data.get('image')):
-            raise forms.ValidationError('حداقل یکی از فیلدهای متن یا ایمج را پر کنید')
-        return True
+    def clean(self):
+        cleaned_data = super().clean()
+        text = cleaned_data.get('text')
+        image = cleaned_data.get('image')
 
-
+        if not text and not image:
+            raise forms.ValidationError('حداقل یکی از فیلدهای "متن سوال" یا "تصویر سوال" باید پر شود.')
+        return cleaned_data
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course

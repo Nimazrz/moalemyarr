@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.http import HttpResponse
@@ -13,8 +14,10 @@ from django.views import View
 from django.urls import reverse_lazy
 from school.models import Subquestion, Right_answer, Wrong_answer
 from .forms import *
-from django.http import JsonResponse
 from .tasks import process_worksheet
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+
 
 
 
@@ -379,20 +382,88 @@ def questions(request, user_id):
 @login_required(login_url='/login/')
 def subquestion_create_view(request):
     question_designer = get_object_or_404(Question_designer, designer=request.user)
+    SESSION_KEY = f"subquestion_defaults_{question_designer.id}"
+
+    # تنظیمات پیش‌فرض در session
+    if SESSION_KEY not in request.session:
+        request.session[SESSION_KEY] = {
+            'score': 1, 'time': 60,
+            'course': None, 'book': None, 'season': None, 'lesson': None, 'subject': None,
+        }
+
+    defaults = request.session[SESSION_KEY]
+
+    # همیشه فرم رو داشته باشیم
+    form = SubquestionForm(
+        request.POST if 'save_defaults' not in request.POST else None,
+        request.FILES
+    )
 
     if request.method == "POST":
-        form = SubquestionForm(request.POST, request.FILES)
-        if form.is_valid():
-            subquestion = form.save(commit=False)
-            subquestion.question_designer = question_designer
-            subquestion.save()
-            form.save_m2m()
-            return redirect("schoolview:right_answer_create", subquestion_id=subquestion.id)
+        if 'save_defaults' in request.POST:
+            # ذخیره تنظیمات پیش‌فرض
+            defaults.update({
+                'score': int(request.POST.get('default_score', 1)),
+                'time': int(request.POST.get('default_time', 60)),
+                'course': request.POST.get('default_course') or None,
+                'book': request.POST.get('default_book') or None,
+                'season': request.POST.get('default_season') or None,
+                'lesson': request.POST.get('default_lesson') or None,
+                'subject': request.POST.get('default_subject') or None,
+            })
+            request.session[SESSION_KEY] = defaults
+            request.session.modified = True
+            messages.success(request, "تنظیمات پیش‌فرض با موفقیت ذخیره شد!")
 
-    elif request.method == "GET":
+        else:
+            # ساخت سوال جدید
+            if form.is_valid():
+                subquestion = form.save(commit=False)
+                subquestion.question_designer = question_designer
+
+                # فیلدهای معمولی
+                subquestion.score = defaults['score']
+                subquestion.time = defaults['time']
+
+                # اول ذخیره کن تا id داشته باشه
+                subquestion.save()
+                form.save_m2m()  # اگر فیلد ManyToMany در فرم بود
+
+                # حالا فیلدهای ManyToMany رو با set پر کن (درست و تمیز!)
+                if defaults['course']:
+                    subquestion.course.set([defaults['course']])
+                if defaults['book']:
+                    subquestion.book.set([defaults['book']])
+                if defaults['season']:
+                    subquestion.season.set([defaults['season']])
+                if defaults['lesson']:
+                    subquestion.lesson.set([defaults['lesson']])
+                if defaults['subject']:
+                    subquestion.subject.set([defaults['subject']])
+
+                messages.success(request, "سوال با موفقیت ایجاد شد و تمام کتگوری‌ها ذخیره شدند!")
+                return redirect("schoolview:right_answer_create", subquestion_id=subquestion.id)
+
+    else:
         form = SubquestionForm()
-    return render(request, 'forms/subquestion_form.html', {'form': form})
-    # return redirect("schoolview:index")
+
+    # لیست‌ها برای سلکت‌ها در پنل کناری
+    course_list = Course.objects.all()
+    book_list = Book.objects.all()
+    season_list = Season.objects.all()
+    lesson_list = Lesson.objects.all()
+    subject_list = Subject.objects.all()
+
+    return render(request, 'forms/subquestion_form.html', {
+        'form': form,
+        'defaults': defaults,
+        'question_designer': question_designer,
+        'course_list': course_list,
+        'book_list': book_list,
+        'season_list': season_list,
+        'lesson_list': lesson_list,
+        'subject_list': subject_list,
+    })
 
 
 @login_required(login_url='/login/')
@@ -554,40 +625,44 @@ def designer_subquestions(request, designer_id):
     return render(request, 'school/designer_subquestions.html', context)
 
 
+from django.forms import inlineformset_factory
+
+@login_required(login_url='/login/')
 def edit_subquestion(request, subquestion_id):
-    subquestion = get_object_or_404(Subquestion, id=subquestion_id)
-    right_answers = Right_answer.objects.filter(subquestion=subquestion)
-    wrong_answers = Wrong_answer.objects.filter(subquestion=subquestion)
+    subquestion = get_object_or_404(Subquestion, id=subquestion_id, question_designer__designer=request.user)
+
+    RightAnswerFormSet = inlineformset_factory(
+        Subquestion, Right_answer, form=RightAnswerForm,
+        extra=0, can_delete=True, fields=('title', 'image', 'audio_file', 'type')
+    )
+    WrongAnswerFormSet = inlineformset_factory(
+        Subquestion, Wrong_answer, form=WrongAnswerForm,
+        extra=0, can_delete=True, fields=('title', 'image', 'audio_file', 'subject')
+    )
 
     if request.method == "POST":
         subquestion_form = SubquestionForm(request.POST, request.FILES, instance=subquestion)
-        right_answer_forms = [RightAnswerForm(request.POST, request.FILES, prefix=f"right-{answer.id}", instance=answer)
-                              for answer in right_answers]
-        wrong_answer_forms = [WrongAnswerForm(request.POST, request.FILES, prefix=f"wrong-{answer.id}", instance=answer)
-                              for answer in wrong_answers]
+        right_formset = RightAnswerFormSet(request.POST, request.FILES, instance=subquestion, prefix='right')
+        wrong_formset = WrongAnswerFormSet(request.POST, request.FILES, instance=subquestion, prefix='wrong')
 
-        if subquestion_form.is_valid() and all(form.is_valid() for form in right_answer_forms + wrong_answer_forms):
+        if subquestion_form.is_valid() and right_formset.is_valid() and wrong_formset.is_valid():
             subquestion_form.save()
-            for form in right_answer_forms + wrong_answer_forms:
-                answer = form.save(commit=False)
-                answer.subquestion = subquestion
-                answer.save()
+            right_formset.save()
+            wrong_formset.save()
+            messages.success(request, "سوال و جواب‌ها با موفقیت ویرایش شدند!")
             return redirect('schoolview:designer_subquestions', request.user.id)
-        else:
-            raise ValueError
 
     else:
         subquestion_form = SubquestionForm(instance=subquestion)
-        right_answer_forms = [RightAnswerForm(prefix=f"right-{answer.id}", instance=answer) for answer in right_answers]
-        wrong_answer_forms = [WrongAnswerForm(prefix=f"wrong-{answer.id}", instance=answer) for answer in wrong_answers]
+        right_formset = RightAnswerFormSet(instance=subquestion, prefix='right')
+        wrong_formset = WrongAnswerFormSet(instance=subquestion, prefix='wrong')
 
     return render(request, 'forms/edit_subquestion.html', {
         'subquestion_form': subquestion_form,
-        'right_answer_forms': right_answer_forms,
-        'wrong_answer_forms': wrong_answer_forms,
-        'subquestion': subquestion
+        'right_formset': right_formset,      # این مهمه!
+        'wrong_formset': wrong_formset,      # این مهمه!
+        'subquestion': subquestion,
     })
-
 
 def delete_subquestion(request, designer_id, subquestion_id):
     subquestion = get_object_or_404(Subquestion, id=subquestion_id)
@@ -662,3 +737,30 @@ def remove_from_leitner(request, student_id, subquestion_id):
 def subquestion_view(request, subquestion_id):
     subquestion = get_object_or_404(Subquestion, id=subquestion_id)
     return render(request, 'school/subquestion_view.html', {'subquestion': subquestion})
+
+
+
+
+@require_GET
+def get_books(request):
+    course_id = request.GET.get('course_id')
+    books = Book.objects.filter(course_id=course_id).values('id', 'name')
+    return JsonResponse(list(books), safe=False)
+
+@require_GET
+def get_seasons(request):
+    book_id = request.GET.get('book_id')
+    seasons = Season.objects.filter(book_id=book_id).values('id', 'name')
+    return JsonResponse(list(seasons), safe=False)
+
+@require_GET
+def get_lessons(request):
+    season_id = request.GET.get('season_id')
+    lessons = Lesson.objects.filter(season_id=season_id).values('id', 'name')
+    return JsonResponse(list(lessons), safe=False)
+
+@require_GET
+def get_subjects(request):
+    lesson_id = request.GET.get('lesson_id')
+    subjects = Subject.objects.filter(lesson_id=lesson_id).values('id', 'name')
+    return JsonResponse(list(subjects), safe=False)

@@ -1,28 +1,259 @@
 {% extends 'parent/base.html' %}
+{% load static %}
 {% block title %}ویرایش سوال{% endblock %}
 
 {% block content %}
-    <h2>ویرایش سوال</h2>
-    <form method="POST" enctype="multipart/form-data">
+<div class="profile-container">
+    <h2 class="text-center mb-4" style="color: #007bff; font-size: 28px; font-weight: bold;">
+        ویرایش سوال
+    </h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success text-center mb-4">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
-        <h3>سوال</h3>
-        {{ subquestion_form.as_p }}
+        <!-- اطلاعات سوال -->
+        <div class="leitner-section mb-5 p-4" style="background: #f9f9f9; border-radius: 12px; border: 1px solid #ddd;">
+            <h3 style="color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-bottom: 20px;">
+                اطلاعات سوال
+            </h3>
 
-        <h3>جواب‌های درست</h3>
-        {% for form in right_answer_forms %}
-            {{ form.as_p }}
-        {% empty %}
-            <p>جواب درست ثبت نشده است.</p>
-        {% endfor %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">شماره سوال</label>
+                    {{ subquestion_form.question }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">امتیاز</label>
+                    {{ subquestion_form.score }}
+                </div>
+            </div>
 
-        <h3>جواب‌های غلط</h3>
-        {% for form in wrong_answer_forms %}
-            {{ form.as_p }}
-        {% empty %}
-            <p>جواب غلط ثبت نشده است.</p>
-        {% endfor %}
+            <div class="mt-4">
+                <label class="form-label fw-bold">متن سوال</label>
+                {{ subquestion_form.text }}
+            </div>
 
-        <button type="submit">ذخیره تغییرات</button>
+            <div class="mt-4">
+                <label class="form-label fw-bold">تصویر سوال (اختیاری)</label>
+                {{ subquestion_form.image }}
+                {% if subquestion.image %}
+                    <div class="mt-3">
+                        <img src="{{ subquestion.image.url }}" class="img-thumbnail" style="max-height: 220px; border-radius: 10px;">
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- جواب‌های درست -->
+        <div class="leitner-section mb-5 p-4" style="background: #f8fff8; border: 3px solid #28a745; border-radius: 12px;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 style="color: #28a745; margin: 0;">جواب‌های درست</h3>
+                <button type="button" id="add-right-answer" class="btn btn-success btn-sm">
+                    + اضافه کردن جواب درست
+                </button>
+            </div>
+
+            {{ right_formset.management_form }}
+            <div id="right-answers-container">
+                {% for form in right_formset %}
+                    <div class="question-box mb-4 position-relative">
+                        {{ form.id }}
+
+                        <!-- دکمه حذف — کاملاً درست و کار می‌کنه -->
+                        <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+                            <label class="btn btn-danger btn-sm" style="padding: 6px 12px; font-size: 13px;">
+                                {{ form.DELETE }}
+                                حذف این جواب
+                            </label>
+                        </div>
+
+                        <div class="p-4" style="padding-top: 50px;">
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold text-success">متن جواب درست</label>
+                                    {{ form.title }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-success">نوع جواب</label>
+                                    {{ form.type }}
+                                </div>
+                            </div>
+                            <div class="row g-3 mt-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-success">تصویر</label>
+                                    {{ form.image }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-success">صوت</label>
+                                    {{ form.audio_file }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- جواب‌های غلط -->
+        <div class="leitner-section p-4" style="background: #fff8f8; border: 3px solid #dc3545; border-radius: 12px;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 style="color: #dc3545; margin: 0;">جواب‌های غلط (اختیاری)</h3>
+                <button type="button" id="add-wrong-answer" class="btn btn-danger btn-sm">
+                    + اضافه کردن جواب غلط
+                </button>
+            </div>
+
+            {{ wrong_formset.management_form }}
+            <div id="wrong-answers-container">
+                {% for form in wrong_formset %}
+                    <div class="question-box mb-4 position-relative">
+                        {{ form.id }}
+
+                        <!-- دکمه حذف — کاملاً درست و کار می‌کنه -->
+                        <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+                            <label class="btn btn-danger btn-sm" style="padding: 6px 12px; font-size: 13px;">
+                                {{ form.DELETE }}
+                                حذف این جواب
+                            </label>
+                        </div>
+
+                        <div class="p-4" style="padding-top: 50px;">
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold text-danger">متن جواب غلط</label>
+                                    {{ form.title }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-danger">موضوع (اختیاری)</label>
+                                    {{ form.subject }}
+                                </div>
+                            </div>
+                            <div class="row g-3 mt-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-danger">تصویر</label>
+                                    {{ form.image }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-danger">صوت</label>
+                                    {{ form.audio_file }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- دکمه ذخیره -->
+        <div class="text-center mt-5">
+            <button type="submit" class="btn btn-primary btn-lg px-5 py-3" style="font-size: 20px;">
+                ذخیره تمام تغییرات
+            </button>
+        </div>
     </form>
+</div>
+
+<!-- فرم خالی برای اضافه کردن جواب درست -->
+<script type="text/template" id="empty-right-form">
+    {{ right_formset.empty_form.id }}
+    <div class="question-box mb-4 position-relative">
+        <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+            <label class="btn btn-danger btn-sm" style="padding: 6px 12px; font-size: 13px;">
+                {{ right_formset.empty_form.DELETE }}
+                حذف این جواب
+            </label>
+        </div>
+        <div class="p-4" style="padding-top: 50px;">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label fw-bold text-success">متن جواب درست</label>
+                    {{ right_formset.empty_form.title }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold text-success">نوع جواب</label>
+                    {{ right_formset.empty_form.type }}
+                </div>
+            </div>
+            <div class="row g-3 mt-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-success">تصویر</label>
+                    {{ right_formset.empty_form.image }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-success">صوت</label>
+                    {{ right_formset.empty_form.audio_file }}
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+<!-- فرم خالی برای اضافه کردن جواب غلط -->
+<script type="text/template" id="empty-wrong-form">
+    {{ wrong_formset.empty_form.id }}
+    <div class="question-box mb-4 position-relative">
+        <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+            <label class="btn btn-danger btn-sm" style="padding: 6px 12px; font-size: 13px;">
+                {{ wrong_formset.empty_form.DELETE }}
+                حذف این جواب
+            </label>
+        </div>
+        <div class="p-4" style="padding-top: 50px;">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label fw-bold text-danger">متن جواب غلط</label>
+                    {{ wrong_formset.empty_form.title }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold text-danger">موضوع (اختیاری)</label>
+                    {{ wrong_formset.empty_form.subject }}
+                </div>
+            </div>
+            <div class="row g-3 mt-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-danger">تصویر</label>
+                    {{ wrong_formset.empty_form.image }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-danger">صوت</label>
+                    {{ wrong_formset.empty_form.audio_file }}
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+<!-- اسکریپت اضافه کردن فرم -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rightContainer = document.getElementById('right-answers-container');
+    const wrongContainer = document.getElementById('wrong-answers-container');
+    const rightTotal = document.querySelector('#id_right-TOTAL_FORMS');
+    const wrongTotal = document.querySelector('#id_wrong-TOTAL_FORMS');
+
+    document.getElementById('add-right-answer').addEventListener('click', function() {
+        const template = document.getElementById('empty-right-form').innerHTML;
+        const count = parseInt(rightTotal.value);
+        const newForm = template.replace(/__prefix__/g, count);
+        rightContainer.insertAdjacentHTML('beforeend', newForm);
+        rightTotal.value = count + 1;
+    });
+
+    document.getElementById('add-wrong-answer').addEventListener('click', function() {
+        const template = document.getElementById('empty-wrong-form').innerHTML;
+        const count = parseInt(wrongTotal.value);
+        const newForm = template.replace(/__prefix__/g, count);
+        wrongContainer.insertAdjacentHTML('beforeend', newForm);
+        wrongTotal.value = count + 1;
+    });
+});
+</script>
 {% endblock %}
